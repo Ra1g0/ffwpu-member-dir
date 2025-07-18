@@ -1,193 +1,188 @@
-import React, { useState, type FormEvent } from 'react';
+import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Navigate , useNavigate} from 'react-router-dom';
 
+export default function Login() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  
 
-const styles = {
-  pageWrapper: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#f5f6fa',
-    position: 'relative',
-  },
-  backgroundImage: {
-    backgroundImage: 'url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80")',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    filter: 'blur(8px)',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: 0,
-    opacity: 0.3,
-  },
-  loginContainer: {
-    position: 'relative',
-    zIndex: 1,
-    background: '#fff',
-    padding: '2rem 2.5rem',
-    borderRadius: '12px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-    minWidth: '350px',
-    maxWidth: '90vw',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-  },
-  header: {
-    marginBottom: '2rem',
-    textAlign: 'center' as const,
-  },
-  logo: {
-    width: '70px',
-    height: '70px',
-    marginBottom: '1rem',
-    objectFit: 'contain' as const,
-  },
-  title: {
-    fontSize: '1.1rem',
-    fontWeight: 700,
-    margin: 0,
-    color: '#2d3436',
-    letterSpacing: '0.03em',
-  },
-  subtitle: {
-    fontSize: '1.2rem',
-    fontWeight: 500,
-    margin: '0.5rem 0 0 0',
-    color: '#636e72',
-  },
-  form: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1rem',
-  },
-  label: {
-    fontWeight: 600,
-    marginBottom: '0.5rem',
-    color: '#2d3436',
-    fontSize: '1rem',
-  },
-  input: {
-    padding: '0.75rem 1rem',
-    border: '1px solid #dfe6e9',
-    borderRadius: '6px',
-    fontSize: '1rem',
-    outline: 'none',
-    marginBottom: '0.5rem',
-  },
-  formBottom: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: '0.5rem',
-  },
-  loginButton: {
-    background: '#0984e3',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '6px',
-    padding: '0.7rem 1.5rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontSize: '1rem',
-    transition: 'background 0.2s',
-  },
-  forgotPassword: {
-    color: '#636e72',
-    textDecoration: 'underline',
-    fontSize: '0.95rem',
-    cursor: 'pointer',
-  },
-  signupText: {
-    marginTop: '1.5rem',
-    textAlign: 'center' as const,
-    color: '#636e72',
-    fontSize: '0.98rem',
-  },
-  signupLink: {
-    color: '#0984e3',
-    textDecoration: 'underline',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-};
-
-const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Add your login logic here
-    alert(`Logging in with Email: ${email} and Password: ${password}`);
+  // Dummy account for testing
+  const dummyAccount = {
+    email: 'admin@ffwpu.org',
+    password: 'password123'
   };
 
-  return (
-    <div style={styles.pageWrapper as React.CSSProperties}>
-      <div style={styles.backgroundImage as React.CSSProperties} aria-hidden="true" />
-      <div style={styles.loginContainer as React.CSSProperties} role="main" aria-label="Login Panel">
-        <header style={styles.header}>
-          <img
-            src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/727cab44-496d-476d-8bb1-ce1e4f920226.png"
-            alt="Family Federation for World Peace and Unification logo"
-            style={styles.logo}
-            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/727cab44-496d-476d-8bb1-ce1e4f920226.png';
-            }}
-          />
-          <h1 style={styles.title}>FAMILY FEDERATION FOR WORLD PEACE AND UNIFICATION</h1>
-          <h2 style={styles.subtitle}>WELCOME BACK!</h2>
-        </header>
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
 
-        <form onSubmit={handleLogin} style={styles.form} aria-label="Login form">
-          <label htmlFor="email" style={styles.label}>
-            Login to your account
-          </label>
-          <input
-            id="email"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={styles.input}
-            aria-required="true"
-            aria-label="Email address"
-          />
-          <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={styles.input}
-            aria-required="true"
-            aria-label="Password"
-          />
-          <div style={styles.formBottom}>
-            <button type="submit" style={styles.loginButton} aria-label="Log in">
-              Log in
-            </button>
-            <a href="#" style={styles.forgotPassword} tabIndex={0}>
-              Forgot Password?
-            </a>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('You must fill up the blank fields*');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Check credentials against dummy account
+      if (formData.email === dummyAccount.email && formData.password === dummyAccount.password) {
+        setIsLoggedIn(true);
+        console.log('Login successful!');
+      } else {
+        setError('Incorrect username or password*');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleForgotPassword = () => {
+    navigate('/forgot-password');
+  };
+
+  if (isLoggedIn) {
+    navigate('/dashboard');
+  }
+
+  return (
+    <div className="flex w-screen h-screen bg-[#064983] flex overflow-hidden">
+      {/* Left Section - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-start justify-center p-8 min-h-full">
+        <div className="w-full max-w-md">
+          {/* Logo and Title */}
+          <div className="flex items-center justify-start mb-8 ">
+            <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+              <div className="text-blue-800 font-bold text-xl">
+                  <img
+                    src="/logo/ffwpu.png"
+                    alt="Photo Collage"
+                    className="w-full w-full object-contain"
+                  />
+              </div>
+            </div>
+            <div className="text-white">
+              <h1 className="text-xl font-bold leading-tight">
+                FAMILY FEDERATION FOR<br/>
+                WORLD PEACE AND<br/>
+                UNIFICATION
+              </h1>
+            </div>
           </div>
-          <p style={styles.signupText}>
-            Don’t have an account?{' '}
-            <a href="#" style={styles.signupLink} tabIndex={0}>
-              Sign Up
-            </a>
-          </p>
-        </form>
+
+          {/* Login Form */}
+          <div className="bg-white rounded-lg p-8 shadow-lg mt-38">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Login to your account</h2>
+            <div className="space-y-4">
+              {/* Email Field */}
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Email Address"
+                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                </button>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Submit Button and Forgot Password Link */}
+              <div className="flex space-x-25">
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="flex-1 bg-[#064983] text-white rounded-2xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Logging in
+                    </div>
+                  ) : (
+                    'Log in'
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="px-4 py-3 text-blue-700 hover:text-blue-500 hover:underline rounded transition-colors font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Section - Photo Collage (Hidden on tablet and mobile) */}
+      <div className="hidden lg:block lg:w-1/2 relative min-h-full flex items-center justify-center">
+        <img
+          src="/login/loginBG.png"
+          alt="Photo Collage"
+          className="w-full w-full object-contain"
+        />
       </div>
     </div>
   );
-};
+}
 
-export default LoginPage;
+
+
+// const handleLogout = () => {
+//   localStorage.removeItem("isLoggedIn");
+//   navigate("/login");
+// };
