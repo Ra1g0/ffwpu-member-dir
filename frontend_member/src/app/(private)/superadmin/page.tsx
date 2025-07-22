@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import Header from '../../../components/header.tsx';
 import Sidebar from '../../../components/sidebar.tsx';
-import { FaEye } from 'react-icons/fa';
-import Modal from '../../../components/memberListModal.tsx';
+import { FaSyncAlt, FaPlus, FaEye,FaEdit } from 'react-icons/fa';
+import Modal from '../../../components/memberListModal.tsx'; 
+import MemberEditModal from '../../../components/memberEditModal.tsx'; 
+import MemberAddModal from '../../../components/memberAddModal.tsx';
 
-function UserPage() {
+
+function MemberPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleView = () => {
     const dummyMember = {
@@ -21,6 +26,19 @@ function UserPage() {
     setIsModalOpen(true);
   };
 
+  const handleEdit = () => {
+  const dummyMember = {
+    name: 'John Regory',
+    region: 'Luzon',
+    nation: 'Philippines',
+    organization: 'FFWPU',
+    department: 'Youth',
+    email: 'john@example.com',
+  };
+  setSelectedMember(dummyMember);
+  setIsEditModalOpen(true);
+};
+
   return (
     <div>
       <Header />
@@ -33,7 +51,7 @@ function UserPage() {
             MEMBERS
           </h2>
           <button className="w-fit flex items-center gap-3 bg-white text-black px-10 py-1 rounded-md text-sm hover:bg-[#053969] hover:text-white transition">
-            {/* You can keep the refresh icon if needed */}
+            <FaSyncAlt className="text-base" />
             Refresh
           </button>
         </div>
@@ -66,8 +84,17 @@ function UserPage() {
             <option>Japan</option>
             <option>Korea</option>
           </select>
+
+          <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="border border-black flex items-center gap-2 bg-white text-black px-7 py-1.5 h-[32px] rounded-md text-sm hover:bg-[#053969] hover:text-white transition"
+        >
+          <FaPlus className="text-sm" />
+          Add Member
+        </button>
         </div>
 
+        
         {/* Table Section */}
         <div className="overflow-x-auto mt-10">
           <table className="min-w-full bg-white text-sm text-center border border-gray-200 rounded-md overflow-hidden">
@@ -101,6 +128,7 @@ function UserPage() {
                 <td className="px-4 py-2">john@example.com</td>
                 <td className="px-4 py-2">
                   <div className="flex justify-center">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={handleView}
                       className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
@@ -109,7 +137,17 @@ function UserPage() {
                       <FaEye className="text-sm" />
                       View
                     </button>
+
+                    <button
+                      onClick={handleEdit}
+                      className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
+                      style={{ backgroundColor: '#064983' }}
+                    >
+                      <FaEdit className="text-sm" />
+                      Edit
+                    </button>
                   </div>
+                </div>
                 </td>
               </tr>
             </tbody>
@@ -122,9 +160,21 @@ function UserPage() {
           onClose={() => setIsModalOpen(false)}
           member={selectedMember}
         />
+        <MemberEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          member={selectedMember}
+        />
+              {isAddModalOpen && (
+        <MemberAddModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+        />
+      )}
+
       </div>
     </div>
   );
 }
 
-export default UserPage;
+export default MemberPage;

@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from '../assets/headbar/logo.png';
 import bellIcon from '../assets/headbar/Bell.png';
 import calendarIcon from '../assets/headbar/Calendar.png';
 import chatIcon from '../assets/headbar/Chat.png';
 
-
 function Header() {
+  const [showModal, setShowModal] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('https://directorybackend-production.up.railway.app/directory/auth/logout/', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      window.location.href = '/login';
+    } catch (err) {
+      alert('Logout failed.');
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-300 h-[78px] px-4 md:px-8">
       <div className="flex items-center justify-between max-w-screen-xl mx-auto w-full h-full">
@@ -28,21 +44,47 @@ function Header() {
             alt="Calendar"
             className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer hover:brightness-75 transition"
           /> 
-           <img
+          <img
             src={chatIcon}
             alt="Chat"
             className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer hover:brightness-75 transition"
           /> 
-           <img
+          <img
             src={bellIcon}
             alt="Bell"
             className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer hover:brightness-75 transition"
           />
 
-          {/* Username */}
-          <div className="flex items-center gap-2 text-sm font-normal text-[#064983] border border-black rounded-full px-3 py-1 bg-white">
+          {/* Username as Modal Trigger */}
+          <div
+            className="relative flex items-center gap-2 text-sm font-normal text-[#064983] border border-black rounded-full px-3 py-1 bg-white hover:bg-gray-100 transition cursor-pointer"
+            onClick={() => setShowModal(true)}
+          >
             <img src={logo} alt="User" className="w-6 h-6 rounded-full object-cover" />
             <span>JohnRegory</span>
+            {/* Modal */}
+            {showModal && (
+              <div className="absolute left-1/2 top-full z-50 flex flex-col items-center"
+                   style={{ transform: 'translateX(-50%)', marginTop: '8px' }}>
+                {/* Triangle */}
+                <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-white mb-[-2px]" />
+                <div className="bg-white rounded-lg shadow-lg p-6 min-w-[250px] flex flex-col items-center">
+                  <span className="mb-4 text-lg font-semibold text-[#064983]">Account</span>
+                  <button
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 rounded font-medium"
+                    onClick={handleLogout}
+                  >
+                    Log out
+                  </button>
+                  <button
+                    className="mt-2 text-sm text-gray-500 hover:underline"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

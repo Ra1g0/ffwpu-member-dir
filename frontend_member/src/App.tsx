@@ -4,16 +4,18 @@ import LoginPage from './app/(private)/login/page'
 import DashboardPage from './app/(private)/dashboard/page'
 import MemberPage from './app/(private)/member/page'
 import ForgotPassword from './app/(private)/login/forgatpass/page'
+import UserPage from './app/(private)/superadmin/page';
 //import PrivateRoute from './components/PrivateRoute';
 
 
 function App() {
   return (
-    <Routes>
+    <Routes>  
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/member" element={<MemberPage />} />
+      <Route path="/superadmin" element={<MemberPage />} />
+      <Route path="/member" element={<UserPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
     </Routes> 
   )

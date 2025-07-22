@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { Navigate , useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -12,13 +12,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-  
-
-  // Dummy account for testing
-  const dummyAccount = {
-    email: 'admin@ffwpu.org',
-    password: 'password123'
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,7 +19,6 @@ export default function Login() {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -42,17 +34,57 @@ export default function Login() {
     }
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Step 1: Login request
+      const loginResponse = await fetch('https://directorybackend-production.up.railway.app/directory/auth/login/', {
+        method: 'POST',
+        credentials: 'include', // Needed if the server sets a cookie
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // Check credentials against dummy account
-      if (formData.email === dummyAccount.email && formData.password === dummyAccount.password) {
-        setIsLoggedIn(true);
-        console.log('Login successful!');
-      } else {
-        setError('Incorrect username or password*');
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        setError(loginData.message || 'Incorrect username or password*');
+        setIsLoading(false);
+        return;
       }
+
+      // Optional: Save token if provided
+      // localStorage.setItem('token', loginData.token);
+
+      setIsLoggedIn(true);
+
+      // Step 2: Fetch user details (GET request)
+      const userResponse = await fetch('https://directorybackend-production.up.railway.app/directory/auth/user/', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          // Optionally add token if required
+          // 'Authorization': `Bearer ${loginData.token}`
+        }
+      });
+
+      const userData = await userResponse.json();
+
+      if (userResponse.ok && userData.permission) {
+        localStorage.setItem('permission', userData.permission);
+
+        // Redirect based on permission
+        if (userData.permission === 'superadmin') {
+          navigate('/superadmin');
+        } else {
+          navigate('/member');
+        }
+      } else {
+        setError('Failed to fetch user info after login.');
+      }
+
     } catch (err) {
+      console.error(err);
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -66,10 +98,6 @@ export default function Login() {
   const handleForgotPassword = () => {
     navigate('/forgot-password');
   };
-
-  if (isLoggedIn) {
-    navigate('/dashboard');
-  }
 
   return (
     <div className="flex w-screen h-screen bg-[#064983] flex overflow-hidden">
@@ -179,10 +207,3 @@ export default function Login() {
     </div>
   );
 }
-
-
-
-// const handleLogout = () => {
-//   localStorage.removeItem("isLoggedIn");
-//   navigate("/login");
-// };
