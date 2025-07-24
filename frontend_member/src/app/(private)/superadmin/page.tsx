@@ -1,43 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Header from '../../../components/header.tsx';
 import Sidebar from '../../../components/sidebar.tsx';
-import { FaSyncAlt, FaPlus, FaEye,FaEdit } from 'react-icons/fa';
+import { FaSyncAlt, FaPlus, FaEye, FaEdit } from 'react-icons/fa';
 import Modal from '../../../components/memberListModal.tsx'; 
 import MemberEditModal from '../../../components/memberEditModal.tsx'; 
 import MemberAddModal from '../../../components/memberAddModal.tsx';
-
 
 function MemberPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [members, setMembers] = useState([]);
 
-  const handleView = () => {
-    const dummyMember = {
-      name: 'John Regory',
-      region: 'Luzon',
-      nation: 'Philippines',
-      organization: 'FFWPU',
-      department: 'Youth',
-      email: 'john@example.com',
-    };
-    setSelectedMember(dummyMember);
+  useEffect(() => {
+    axios.get('https://directorybackend-production.up.railway.app/directory/members/')
+      .then(res => setMembers(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const handleView = (member: any) => {
+    setSelectedMember(member);
     setIsModalOpen(true);
   };
 
-  const handleEdit = () => {
-  const dummyMember = {
-    name: 'John Regory',
-    region: 'Luzon',
-    nation: 'Philippines',
-    organization: 'FFWPU',
-    department: 'Youth',
-    email: 'john@example.com',
+  const handleEdit = (member: any) => {
+    setSelectedMember(member);
+    setIsEditModalOpen(true);
   };
-  setSelectedMember(dummyMember);
-  setIsEditModalOpen(true);
-};
 
   return (
     <div>
@@ -86,15 +77,14 @@ function MemberPage() {
           </select>
 
           <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="border border-black flex items-center gap-2 bg-white text-black px-7 py-1.5 h-[32px] rounded-md text-sm hover:bg-[#053969] hover:text-white transition"
-        >
-          <FaPlus className="text-sm" />
-          Add Member
-        </button>
+            onClick={() => setIsAddModalOpen(true)}
+            className="border border-black flex items-center gap-2 bg-white text-black px-7 py-1.5 h-[32px] rounded-md text-sm hover:bg-[#053969] hover:text-white transition"
+          >
+            <FaPlus className="text-sm" />
+            Add Member
+          </button>
         </div>
 
-        
         {/* Table Section */}
         <div className="overflow-x-auto mt-10">
           <table className="min-w-full bg-white text-sm text-center border border-gray-200 rounded-md overflow-hidden">
@@ -103,8 +93,10 @@ function MemberPage() {
               <tr className="border-b bg-white text-black text-[1px] ">
                 <th colSpan="7" className="px-4 py-2">
                   <div className="flex justify-between text-xs text-gray-600 font-light">
-                    <span>Showing 1–10 of 60 members</span>
-                    <span>Page 1 of 6</span>
+                    <span>
+                      Showing {members.length > 0 ? `1–${Math.min(10, members.length)} of ${members.length} members` : 'No members'}
+                    </span>
+                    <span>Page 1 of {Math.ceil(members.length / 10) || 1}</span>
                   </div>
                 </th>
               </tr>
@@ -119,42 +111,41 @@ function MemberPage() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t hover:bg-gray-100">
-                <td className="px-4 py-2">John Regory</td>
-                <td className="px-4 py-2">Luzon</td>
-                <td className="px-4 py-2">Philippines</td>
-                <td className="px-4 py-2">FFWPU</td>
-                <td className="px-4 py-2">Youth</td>
-                <td className="px-4 py-2">john@example.com</td>
-                <td className="px-4 py-2">
-                  <div className="flex justify-center">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleView}
-                      className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
-                      style={{ backgroundColor: '#066DC7' }}
-                    >
-                      <FaEye className="text-sm" />
-                      View
-                    </button>
-
-                    <button
-                      onClick={handleEdit}
-                      className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
-                      style={{ backgroundColor: '#064983' }}
-                    >
-                      <FaEdit className="text-sm" />
-                      Edit
-                    </button>
-                  </div>
-                </div>
-                </td>
-              </tr>
+              {members.slice(0, 10).map((member: any) => (
+                <tr key={member.id || member.email} className="border-t hover:bg-gray-100">
+                  <td className="px-4 py-2">{member.full_name || member.name}</td>
+                  <td className="px-4 py-2">{member.region}</td>
+                  <td className="px-4 py-2">{member.nation}</td>
+                  <td className="px-4 py-2">{member.organization}</td>
+                  <td className="px-4 py-2">{member.department}</td>
+                  <td className="px-4 py-2">{member.email}</td>
+                  <td className="px-4 py-2">
+                    <div className="flex justify-center items-center gap-2">
+                      <button
+                        onClick={() => handleView(member)}
+                        className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
+                        style={{ backgroundColor: '#066DC7' }}
+                      >
+                        <FaEye className="text-sm" />
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleEdit(member)}
+                        className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
+                        style={{ backgroundColor: '#064983' }}
+                      >
+                        <FaEdit className="text-sm" />
+                        Edit
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Modal */}
+        {/* Modals */}
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
@@ -165,13 +156,12 @@ function MemberPage() {
           onClose={() => setIsEditModalOpen(false)}
           member={selectedMember}
         />
-              {isAddModalOpen && (
-        <MemberAddModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-        />
-      )}
-
+        {isAddModalOpen && (
+          <MemberAddModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

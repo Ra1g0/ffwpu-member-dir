@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+
+const API_BASE = 'https://directorybackend-production.up.railway.app/directory';
 
 const profileTabs = [
   'Personal & Contact',
@@ -15,69 +18,382 @@ const profileTabs = [
 const MemberEditModal = ({ isOpen, onClose, member }) => {
   const [activeTab, setActiveTab] = useState('Personal & Contact');
   const [formData, setFormData] = useState({ ...member });
+  const [personalInfo, setPersonalInfo] = useState({}); // For showing info
 
-  const handleInputChange = (key, value) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+  // Editable states for each tab
+  const [editAcademic, setEditAcademic] = useState([]);
+  const [editFamily, setEditFamily] = useState([]);
+  const [editPublicMission, setEditPublicMission] = useState([]);
+  const [editWork, setEditWork] = useState([]);
+  const [editTraining, setEditTraining] = useState([]);
+  const [editQualifications, setEditQualifications] = useState([]);
+  const [editAwards, setEditAwards] = useState([]);
+  const [editDisciplinary, setEditDisciplinary] = useState([]);
+  const [editSpecialNotes, setEditSpecialNotes] = useState([]);
+
+  useEffect(() => {
+    if (!member?.member_id) return;
+    // Fetch personal info for Personal & Contact tab
+    if (activeTab === 'Personal & Contact') {
+      axios.get(`${API_BASE}/members/${member.member_id}/`)
+        .then(res => {
+          setPersonalInfo(res.data);
+          setFormData(res.data); // Sync formData with backend
+        });
+    }
+    if (activeTab === 'Academic Background') {
+      axios.get(`${API_BASE}/members/${member.member_id}/academic-background/`).then(res => setEditAcademic(res.data));
+    }
+    if (activeTab === 'Family Details') {
+      axios.get(`${API_BASE}/members/${member.member_id}/family-details/`).then(res => setEditFamily(res.data));
+    }
+    if (activeTab === 'Public Mission Post Held') {
+      axios.get(`${API_BASE}/members/${member.member_id}/public-mission-posts/`).then(res => setEditPublicMission(res.data));
+    }
+    if (activeTab === 'Work Experience') {
+      axios.get(`${API_BASE}/members/${member.member_id}/work-experiences/`).then(res => setEditWork(res.data));
+    }
+    if (activeTab === 'Training & Qualifications') {
+      axios.get(`${API_BASE}/members/${member.member_id}/training-courses/`).then(res => setEditTraining(res.data));
+      axios.get(`${API_BASE}/members/${member.member_id}/qualifications/`).then(res => setEditQualifications(res.data));
+    }
+    if (activeTab === 'Awards & Penalties') {
+      axios.get(`${API_BASE}/members/${member.member_id}/awards-recognition/`).then(res => setEditAwards(res.data));
+      axios.get(`${API_BASE}/members/${member.member_id}/disciplinary-actions/`).then(res => setEditDisciplinary(res.data));
+    }
+    if (activeTab === 'Special Notes') {
+      axios.get(`${API_BASE}/members/${member.member_id}/special-note/`).then(res => setEditSpecialNotes(res.data));
+    }
+  }, [activeTab, member]);
+
+  // Generic handler for editing table cells
+  const handleTableInputChange = (tab, idx, key, value) => {
+    const setterMap = {
+      'Academic Background': setEditAcademic,
+      'Family Details': setEditFamily,
+      'Public Mission Post Held': setEditPublicMission,
+      'Work Experience': setEditWork,
+      'Training & Qualifications': setEditTraining,
+      'Qualifications': setEditQualifications,
+      'Awards': setEditAwards,
+      'Disciplinary Actions': setEditDisciplinary,
+      'Special Notes': setEditSpecialNotes,
+    };
+    const stateMap = {
+      'Academic Background': editAcademic,
+      'Family Details': editFamily,
+      'Public Mission Post Held': editPublicMission,
+      'Work Experience': editWork,
+      'Training & Qualifications': editTraining,
+      'Qualifications': editQualifications,
+      'Awards': editAwards,
+      'Disciplinary Actions': editDisciplinary,
+      'Special Notes': editSpecialNotes,
+    };
+    const newRows = [...stateMap[tab]];
+    newRows[idx] = { ...newRows[idx], [key]: value };
+    setterMap[tab](newRows);
   };
 
-  const handleSocialChange = (platform, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      social: {
-        ...prev.social,
-        [platform]: value,
-      },
-    }));
+  // Update handler for each row
+  const handleUpdateRow = (tab, row) => {
+    let url = '';
+    switch (tab) {
+      case 'Academic Background':
+        url = `${API_BASE}/members/${member.member_id}/academic-background/${row.academic_record_id}/update/`;
+        break;
+      case 'Family Details':
+        url = `${API_BASE}/members/${member.member_id}/family-details/${row.family_member_id}/update/`;
+        break;
+      case 'Public Mission Post Held':
+        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/${row.mission_id}/update/`;
+        break;
+      case 'Work Experience':
+        url = `${API_BASE}/members/${member.member_id}/work-experiences/${row.experience_id}/update/`;
+        break;
+      case 'Training & Qualifications':
+        url = `${API_BASE}/members/${member.member_id}/training-courses/${row.training_id}/update/`;
+        break;
+      case 'Qualifications':
+        url = `${API_BASE}/members/${member.member_id}/qualifications/${row.qualification_id}/update/`;
+        break;
+      case 'Awards':
+        url = `${API_BASE}/members/${member.member_id}/awards-recognition/${row.award_id}/update/`;
+        break;
+      case 'Disciplinary Actions':
+        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/${row.penalty_id}/update/`;
+        break;
+      case 'Special Notes':
+        url = `${API_BASE}/members/${member.member_id}/special-note/${row.note_id}/update/`;
+        break;
+      default:
+        return;
+    }
+    axios.put(url, row)
+      .then(() => alert('Updated!'))
+      .catch(() => alert('Update failed!'));
   };
 
-  if (!isOpen) return null;
+  const handleDeleteRow = (tab, row) => {
+    let url = '';
+    switch (tab) {
+      case 'Academic Background':
+        url = `${API_BASE}/members/${member.member_id}/academic-background/${row.academic_record_id}/delete/`;
+        break;
+      case 'Family Details':
+        url = `${API_BASE}/members/${member.member_id}/family-details/${row.family_member_id}/delete/`;
+        break;
+      case 'Public Mission Post Held':
+        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/${row.mission_id}/delete/`;
+        break;
+      case 'Work Experience':
+        url = `${API_BASE}/members/${member.member_id}/work-experiences/${row.experience_id}/delete/`;
+        break;
+      case 'Training & Qualifications':
+        url = `${API_BASE}/members/${member.member_id}/training-courses/${row.training_id}/delete/`;
+        break;
+      case 'Qualifications':
+        url = `${API_BASE}/members/${member.member_id}/qualifications/${row.qualification_id}/delete/`;
+        break;
+      case 'Awards':
+        url = `${API_BASE}/members/${member.member_id}/awards-recognition/${row.award_id}/delete/`;
+        break;
+      case 'Disciplinary Actions':
+        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/${row.penalty_id}/delete/`;
+        break;
+      case 'Special Notes':
+        url = `${API_BASE}/members/${member.member_id}/special-note/${row.note_id}/delete/`;
+        break;
+      default:
+        return;
+    }
+    axios.delete(url)
+      .then(() => alert('Deleted!'))
+      .catch(() => alert('Delete failed!'));
+  };
 
-  const renderTableWithActions = (headers, rows) => (
+  // Helper to add a new row for each tab
+  const handleAddRow = (tab) => {
+    const emptyRows = {
+      'Academic Background': { period: '', school: '', degree: '', graduation: '', isNew: true },
+      'Family Details': { relation: '', name: '', birthday: '', blessing: '', isNew: true },
+      'Public Mission Post Held': { period: '', organization: '', final_position: '', department: '', description: '', isNew: true },
+      'Work Experience': { period: '', organization_name: '', final_position: '', department: '', job_description: '', isNew: true },
+      'Training & Qualifications': { type: '', name_of_course: '', period: '', organization: '', status: '', isNew: true },
+      'Qualifications': { date_acquisition: '', name_qualification: '', remarks: '', isNew: true },
+      'Awards': { date: '', type: '', description: '', organization: '', isNew: true },
+      'Disciplinary Actions': { date: '', reason: '', isNew: true },
+      'Special Notes': { date_written: '', details: '', isNew: true },
+    };
+    switch (tab) {
+      case 'Academic Background':
+        setEditAcademic(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Family Details':
+        setEditFamily(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Public Mission Post Held':
+        setEditPublicMission(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Work Experience':
+        setEditWork(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Training & Qualifications':
+        setEditTraining(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Qualifications':
+        setEditQualifications(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Awards':
+        setEditAwards(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Disciplinary Actions':
+        setEditDisciplinary(prev => [...prev, emptyRows[tab]]);
+        break;
+      case 'Special Notes':
+        setEditSpecialNotes(prev => [...prev, emptyRows[tab]]);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Create handler for new rows
+  const handleCreateRow = (tab, row, idx) => {
+    let url = '';
+    let payload = { ...row };
+    delete payload.isNew;
+    switch (tab) {
+      case 'Academic Background':
+        url = `${API_BASE}/members/${member.member_id}/academic-background/create/`;
+        break;
+      case 'Family Details':
+        url = `${API_BASE}/members/${member.member_id}/family-details/create/`;
+        break;
+      case 'Public Mission Post Held':
+        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/create/`;
+        break;
+      case 'Work Experience':
+        url = `${API_BASE}/members/${member.member_id}/work-experiences/create/`;
+        break;
+      case 'Training & Qualifications':
+        url = `${API_BASE}/members/${member.member_id}/training-courses/create/`;
+        break;
+      case 'Qualifications':
+        url = `${API_BASE}/members/${member.member_id}/qualifications/create/`;
+        break;
+      case 'Awards':
+        url = `${API_BASE}/members/${member.member_id}/awards-recognition/create/`;
+        break;
+      case 'Disciplinary Actions':
+        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/create/`;
+        break;
+      case 'Special Notes':
+        url = `${API_BASE}/members/${member.member_id}/special-note/create/`;
+        break;
+      default:
+        return;
+    }
+    axios.post(url, payload)
+      .then(() => {
+        alert('Created!');
+        // Remove isNew row and refetch
+        switch (tab) {
+          case 'Academic Background':
+            setEditAcademic(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Family Details':
+            setEditFamily(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Public Mission Post Held':
+            setEditPublicMission(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Work Experience':
+            setEditWork(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Training & Qualifications':
+            setEditTraining(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Qualifications':
+            setEditQualifications(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Awards':
+            setEditAwards(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Disciplinary Actions':
+            setEditDisciplinary(prev => prev.filter((_, i) => i !== idx));
+            break;
+          case 'Special Notes':
+            setEditSpecialNotes(prev => prev.filter((_, i) => i !== idx));
+            break;
+          default:
+            break;
+        }
+      })
+      .catch(() => alert('Create failed!'));
+  };
+
+  // Editable table renderer
+  const renderEditableTable = (headers, keys, rows, tab, idKey) => (
     <table className="min-w-[700px] sm:min-w-full text-sm sm:text-base text-center bg-white border border-gray-200 rounded-md overflow-hidden">
       <thead className="bg-[#245AD2] text-white">
         <tr>
           {headers.map((head, idx) => (
-            <th key={idx} className="px-4 py-2 whitespace-nowrap">
-              {head}
-            </th>
+            <th key={idx} className="px-4 py-2 whitespace-nowrap">{head}</th>
           ))}
           <th className="px-4 py-2 whitespace-nowrap">Action</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((cols, rowIdx) => (
-          <tr key={rowIdx} className="border-t hover:bg-gray-100">
-            {cols.map((col, colIdx) => (
+        {rows.map((row, rowIdx) => (
+          <tr key={row[idKey] || rowIdx} className="border-t hover:bg-gray-100">
+            {keys.map((key, colIdx) => (
               <td key={colIdx} className="px-4 py-2 whitespace-nowrap">
-                {col}
+                <input
+                  type="text"
+                  className="border border-gray-300 rounded px-2 py-1 w-full"
+                  value={row[key] || ''}
+                  onChange={e => handleTableInputChange(tab, rowIdx, key, e.target.value)}
+                />
               </td>
             ))}
             <td className="px-4 py-2 whitespace-nowrap">
-            <div className="flex justify-center items-center gap-2">
-              <button className="text-sm px-2 py-1 bg-[#066DC7] text-white rounded-md flex items-center gap-1">
-                <FaEdit className="text-xs" />
-
-              </button>
-              <button className="text-sm px-2 py-1 bg-red-600 text-white rounded-md flex items-center gap-1">
-                <FaTrash className="text-xs" />
-               
-              </button>
-            </div>
-          </td>
+              <div className="flex gap-2 justify-center items-center">
+                {row.isNew ? (
+                  <button
+                    className="text-sm px-2 py-1 bg-green-600 text-white rounded-md flex items-center gap-1"
+                    onClick={() => handleCreateRow(tab, row, rowIdx)}
+                    title="Create"
+                  >
+                    <FaPlus className="text-xs" /> Create
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="text-sm px-2 py-1 bg-[#066DC7] text-white rounded-md flex items-center gap-1"
+                      onClick={() => handleUpdateRow(tab, row)}
+                      title="Update"
+                    >
+                      <FaEdit className="text-xs" />
+                    </button>
+                    <button
+                      className="text-sm px-2 py-1 bg-red-600 text-white rounded-md flex items-center gap-1"
+                      onClick={() => handleDeleteRow(tab, row)}
+                      title="Delete"
+                    >
+                      <FaTrash className="text-xs" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </td>
           </tr>
         ))}
       </tbody>
     </table>
   );
 
-  const renderTabHeader = (title, buttonText) => (
+  // Tab header renderer
+  const renderTabHeader = (title, buttonText, onAdd) => (
     <div className="flex justify-between items-center mb-2">
       <p className="text-sm sm:text-base">{title}</p>
-      <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded flex items-center gap-1 text-xs sm:text-sm">
+      <button
+        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded flex items-center gap-1 text-xs sm:text-sm"
+        onClick={onAdd}
+      >
         <FaPlus /> {buttonText}
       </button>
     </div>
   );
+
+  // Personal tab input handler
+  const handleInputChange = (key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // Save handler for Personal & Contact
+  const handleSavePersonal = () => {
+    axios.put(`${API_BASE}/members/${member.member_id}/update/`, formData)
+      .then(() => alert('Personal info updated!'))
+      .catch(() => alert('Update failed!'));
+  };
+
+  // Delete handler for Personal & Contact
+  const handleDeletePersonal = () => {
+    if (window.confirm('Are you sure you want to delete this member?')) {
+      axios.delete(`${API_BASE}/members/${member.member_id}/delete/`)
+        .then(() => {
+          alert('Member deleted!');
+          onClose();
+        })
+        .catch(() => alert('Delete failed!'));
+    }
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -124,18 +440,22 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
               <div className="flex flex-col w-full sm:w-1/3 h-full">
                 <div className="flex flex-col items-center sm:items-center text-center sm:text-left mt-10">
                   <img
-                    src="https://ui-avatars.com/api/?name=John+Regory"
+                    src={
+                      personalInfo?.profile_photo_url
+                        ? `https://res.cloudinary.com/debx9uf7g/${personalInfo.profile_photo_url}`
+                        : "https://ui-avatars.com/api/?name=No+Photo"
+                    }
                     alt="Profile"
                     className="w-32 h-32 sm:w-70 sm:h-70 rounded-full object-cover shadow mx-auto sm:mx-0"
                   />
+                  
                 </div>
               </div>
-
               <div className="flex-1 text-sm text-gray-800 space-y-2">
-                <h2 className="text-lg sm:text-xl font-bold mb-2 mt-2">Personal and Contact Details</h2>
+                <h2 className="text-lg sm:text-xl font-bold mb-2 mt-2">Edit Personal and Contact Details</h2>
                 <div className="space-y-2">
                   {[
-                    { label: 'Name', key: 'name' },
+                    { label: 'Name', key: 'full_name' },
                     { label: 'Email', key: 'email' },
                     { label: 'Region', key: 'region' },
                     { label: 'Nation', key: 'nation' },
@@ -157,7 +477,7 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
                         <select
                           className="border border-gray-300 rounded px-2 py-1 w-full"
                           value={formData[key] || ''}
-                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          onChange={(e) => setFormData(prev => ({ ...prev, [key]: e.target.value }))}
                         >
                           <option value="">-- Select --</option>
                           {options.map((opt) => (
@@ -169,137 +489,150 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
                           type={type || 'text'}
                           className="border border-gray-300 rounded px-2 py-1 w-full"
                           value={formData[key] || ''}
-                          onChange={(e) => handleInputChange(key, e.target.value)}
+                          onChange={(e) => setFormData(prev => ({ ...prev, [key]: e.target.value }))}
                         />
                       )}
                     </div>
                   ))}
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      className="text-sm px-4 py-2 bg-[#066DC7] text-white rounded-md flex items-center gap-1"
+                      onClick={handleSavePersonal}
+                    >
+                      <FaEdit className="text-xs" /> Save
+                    </button>
+                    <button
+                      className="text-sm px-4 py-2 bg-red-600 text-white rounded-md flex items-center gap-1"
+                      onClick={handleDeletePersonal}
+                    >
+                      <FaTrash className="text-xs" /> Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Tab: Academic Background */}
+          {/* Academic Background */}
           {activeTab === 'Academic Background' && (
             <div className="w-full">
-              {renderTabHeader('Academic Background', 'Add Academic')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                {renderTableWithActions(
-                  ['Period', 'School', 'Major/Degree', 'Graduation'],
-                  [['2022–2026', 'Pamantasan ng Lungsod ng Maynila', 'BS Computer Science', '2026']]
-                )}
-              </div>
+              {renderTabHeader('Academic Background', 'Add Academic', () => handleAddRow('Academic Background'))}
+              {renderEditableTable(
+                ['Period', 'School', 'Major/Degree', 'Graduation'],
+                ['period', 'school', 'degree', 'graduation'],
+                editAcademic,
+                'Academic Background',
+                'academic_record_id'
+              )}
             </div>
           )}
 
-          {/* Tab: Family Details */}
+          {/* Family Details */}
           {activeTab === 'Family Details' && (
             <div className="w-full">
-              {renderTabHeader('Family Details', 'Add Family')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                {renderTableWithActions(
-                  ['Relation', 'Name', 'Date of Birth', 'Blessing'],
-                  [['Spouse', 'Chrysler Ann Dejillo', 'October 21, 2002', '1st Gen Couple']]
-                )}
-              </div>
+              {renderTabHeader('Family Details', 'Add Family Member', () => handleAddRow('Family Details'))}
+              {renderEditableTable(
+                ['Relation', 'Name', 'Birthday', 'Blessing'],
+                ['relation', 'name', 'birthday', 'blessing'],
+                editFamily,
+                'Family Details',
+                'family_member_id'
+              )}
             </div>
           )}
 
-          {/* Tab: Public Mission Posts Held */}
+          {/* Public Mission Post Held */}
           {activeTab === 'Public Mission Post Held' && (
             <div className="w-full">
-              {renderTabHeader('Public Mission Posts Held', 'Add Mission')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                {renderTableWithActions(
-                  ['Period', 'Organization Name', 'Final Position', 'Department', 'Description'],
-                  [['2020–2022', 'Family Federation for World Peace and Unification', 'Example Position', 'Volunteer Management', 'Example Job Description']]
-                )}
-              </div>
+              {renderTabHeader('Public Mission Post Held', 'Add Mission Post', () => handleAddRow('Public Mission Post Held'))}
+              {renderEditableTable(
+                ['Period', 'Organization', 'Final Position', 'Department', 'Description'],
+                ['period', 'organization', 'final_position', 'department', 'description'],
+                editPublicMission,
+                'Public Mission Post Held',
+                'mission_id'
+              )}
             </div>
           )}
 
-          {/* Tab: Work Experience */}
+          {/* Work Experience */}
           {activeTab === 'Work Experience' && (
             <div className="w-full">
-              {renderTabHeader('Work Experience', 'Add Work')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                {renderTableWithActions(
-                  ['Period', 'Organization Name', 'Final Position', 'Department', 'Description'],
-                  [['2018–2022', 'Tech Solutions Inc.', 'Senior Software Engineer', 'Volunteer Management', 'Example Job Description']]
-                )}
-              </div>
+              {renderTabHeader('Work Experience', 'Add Experience', () => handleAddRow('Work Experience'))}
+              {renderEditableTable(
+                ['Period', 'Organization Name', 'Final Position', 'Department', 'Job Description'],
+                ['period', 'organization_name', 'final_position', 'department', 'job_description'],
+                editWork,
+                'Work Experience',
+                'experience_id'
+              )}
             </div>
           )}
 
-          {/* Tab: Training & Qualifications */}
+          {/* Training & Qualifications */}
           {activeTab === 'Training & Qualifications' && (
-            <div className="w-full">
-              {renderTabHeader('Training Courses', 'Add Training')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 mb-8">
-                {renderTableWithActions(
-                  ['Type', 'Name of Course', 'Period', 'Organization', 'Status'],
-                  [['Certification', 'Advanced JavaScript', 'Jan. 2023 - Mar. 2023', 'Online University', 'Finished']]
-                )}
-              </div>
-              {renderTabHeader('Professional Qualifications', 'Add Qualification')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                {renderTableWithActions(
-                  ['Date of Acquisition', 'Name of Qualification', 'Remarks'],
-                  [['Jan. 2023 - Mar. 2023', 'Certified Kubernetes Administrator (CKA)', 'Valid until June 2023']]
-                )}
-              </div>
-            </div>
-          )}
+          <div className="w-full">
+            {/* Training Courses Section */}
+            {renderTabHeader('Training Courses', 'Add Training', () => handleAddRow('Training & Qualifications'))}
+            {renderEditableTable(
+              ['Type', 'Name of Course', 'Period', 'Organization', 'Status'],
+              ['type', 'name_of_course', 'period', 'organization', 'status'],
+              editTraining,
+              'Training & Qualifications',
+              'training_id'
+            )}
 
-          {/* Tab: Awards & Penalties */}
+            {/* Qualifications Section */}
+            {renderTabHeader('Professional Qualifications', 'Add Qualification', () => handleAddRow('Qualifications'))}
+            {renderEditableTable(
+      ['Date of Acquisition', 'Name of Qualification', 'Remarks'],
+      ['date_acquisition', 'name_qualification', 'remarks'],
+      editQualifications,
+      'Qualifications',
+      'qualification_id'
+    )}
+  </div>
+)}
+
+          {/* Awards & Penalties */}
           {activeTab === 'Awards & Penalties' && (
             <div className="w-full space-y-8">
               <div>
-                {renderTabHeader('Recognition & Awards', 'Add Award')}
-                <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                  {renderTableWithActions(
-                    ['Date', 'Type', 'Description', 'Organization'],
-                    [['Dec. 15, 2022', 'Employee of the Year', 'Outstanding performance in Project Alpha', 'Tech Solutions Inc.']]
-                  )}
-                </div>
+                {renderTabHeader('Awards', 'Add Award', () => handleAddRow('Awards'))}
+                {renderEditableTable(
+                  ['Date', 'Type', 'Description', 'Organization'],
+                  ['date', 'type', 'description', 'organization'],
+                  editAwards,
+                  'Awards',
+                  'award_id'
+                )}
               </div>
               <div>
-                {renderTabHeader('Disciplinary Actions/Penalties', 'Add Penalty')}
-                <div className="w-full mt-2 overflow-x-auto rounded-md border border-gray-200 scrollbar-thin scrollbar-thumb-gray-400">
-                  {renderTableWithActions(
-                    ['Date', 'Reason'],
-                    [['--', '--']]
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab: Special Notes */}
-          {activeTab === 'Special Notes' && (
-            <div className="w-full">
-              {renderTabHeader('Special Notes', 'Add Note')}
-              <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                {renderTableWithActions(
-                  ['Date Written', 'Details'],
-                  [['--', '--']]
+                {renderTabHeader('Disciplinary Actions', 'Add Disciplinary Action', () => handleAddRow('Disciplinary Actions'))}
+                {renderEditableTable(
+                  ['Date', 'Reason'],
+                  ['date', 'reason'],
+                  editDisciplinary,
+                  'Disciplinary Actions',
+                  'penalty_id'
                 )}
               </div>
             </div>
           )}
-        </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end gap-4 mt-6 border-t pt-4">
-          <button
-            onClick={() => {
-              console.log('Saving...', formData);
-              alert('Changes saved!');
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md"
-          >
-            Save
-          </button>
+          {/* Special Notes */}
+          {activeTab === 'Special Notes' && (
+            <div className="w-full">
+              {renderTabHeader('Special Notes', 'Add Note', () => handleAddRow('Special Notes'))}
+              {renderEditableTable(
+                ['Date Written', 'Details'],
+                ['date_written', 'details'],
+                editSpecialNotes,
+                'Special Notes',
+                'note_id'
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
