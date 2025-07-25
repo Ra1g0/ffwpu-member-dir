@@ -172,127 +172,6 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
       .catch(() => alert('Delete failed!'));
   };
 
-  // Helper to add a new row for each tab
-  const handleAddRow = (tab) => {
-    const emptyRows = {
-      'Academic Background': { period: '', school: '', degree: '', graduation: '', isNew: true },
-      'Family Details': { relation: '', name: '', birthday: '', blessing: '', isNew: true },
-      'Public Mission Post Held': { period: '', organization: '', final_position: '', department: '', description: '', isNew: true },
-      'Work Experience': { period: '', organization_name: '', final_position: '', department: '', job_description: '', isNew: true },
-      'Training & Qualifications': { type: '', name_of_course: '', period: '', organization: '', status: '', isNew: true },
-      'Qualifications': { date_acquisition: '', name_qualification: '', remarks: '', isNew: true },
-      'Awards': { date: '', type: '', description: '', organization: '', isNew: true },
-      'Disciplinary Actions': { date: '', reason: '', isNew: true },
-      'Special Notes': { date_written: '', details: '', isNew: true },
-    };
-    switch (tab) {
-      case 'Academic Background':
-        setEditAcademic(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Family Details':
-        setEditFamily(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Public Mission Post Held':
-        setEditPublicMission(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Work Experience':
-        setEditWork(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Training & Qualifications':
-        setEditTraining(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Qualifications':
-        setEditQualifications(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Awards':
-        setEditAwards(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Disciplinary Actions':
-        setEditDisciplinary(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Special Notes':
-        setEditSpecialNotes(prev => [...prev, emptyRows[tab]]);
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Create handler for new rows
-  const handleCreateRow = (tab, row, idx) => {
-    let url = '';
-    let payload = { ...row };
-    delete payload.isNew;
-    switch (tab) {
-      case 'Academic Background':
-        url = `${API_BASE}/members/${member.member_id}/academic-background/create/`;
-        break;
-      case 'Family Details':
-        url = `${API_BASE}/members/${member.member_id}/family-details/create/`;
-        break;
-      case 'Public Mission Post Held':
-        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/create/`;
-        break;
-      case 'Work Experience':
-        url = `${API_BASE}/members/${member.member_id}/work-experiences/create/`;
-        break;
-      case 'Training & Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/training-courses/create/`;
-        break;
-      case 'Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/qualifications/create/`;
-        break;
-      case 'Awards':
-        url = `${API_BASE}/members/${member.member_id}/awards-recognition/create/`;
-        break;
-      case 'Disciplinary Actions':
-        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/create/`;
-        break;
-      case 'Special Notes':
-        url = `${API_BASE}/members/${member.member_id}/special-note/create/`;
-        break;
-      default:
-        return;
-    }
-    axios.post(url, payload)
-      .then(() => {
-        alert('Created!');
-        // Remove isNew row and refetch
-        switch (tab) {
-          case 'Academic Background':
-            setEditAcademic(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Family Details':
-            setEditFamily(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Public Mission Post Held':
-            setEditPublicMission(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Work Experience':
-            setEditWork(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Training & Qualifications':
-            setEditTraining(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Qualifications':
-            setEditQualifications(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Awards':
-            setEditAwards(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Disciplinary Actions':
-            setEditDisciplinary(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Special Notes':
-            setEditSpecialNotes(prev => prev.filter((_, i) => i !== idx));
-            break;
-          default:
-            break;
-        }
-      })
-      .catch(() => alert('Create failed!'));
-  };
-
   // Editable table renderer
   const renderEditableTable = (headers, keys, rows, tab, idKey) => (
     <table className="min-w-[700px] sm:min-w-full text-sm sm:text-base text-center bg-white border border-gray-200 rounded-md overflow-hidden">
@@ -319,32 +198,20 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             ))}
             <td className="px-4 py-2 whitespace-nowrap">
               <div className="flex gap-2 justify-center items-center">
-                {row.isNew ? (
-                  <button
-                    className="text-sm px-2 py-1 bg-green-600 text-white rounded-md flex items-center gap-1"
-                    onClick={() => handleCreateRow(tab, row, rowIdx)}
-                    title="Create"
-                  >
-                    <FaPlus className="text-xs" /> Create
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      className="text-sm px-2 py-1 bg-[#066DC7] text-white rounded-md flex items-center gap-1"
-                      onClick={() => handleUpdateRow(tab, row)}
-                      title="Update"
-                    >
-                      <FaEdit className="text-xs" />
-                    </button>
-                    <button
-                      className="text-sm px-2 py-1 bg-red-600 text-white rounded-md flex items-center gap-1"
-                      onClick={() => handleDeleteRow(tab, row)}
-                      title="Delete"
-                    >
-                      <FaTrash className="text-xs" />
-                    </button>
-                  </>
-                )}
+                <button
+                  className="text-sm px-2 py-1 bg-[#066DC7] text-white rounded-md flex items-center gap-1"
+                  onClick={() => handleUpdateRow(tab, row)}
+                  title="Update"
+                >
+                  <FaEdit className="text-xs" />
+                </button>
+                <button
+                  className="text-sm px-2 py-1 bg-red-600 text-white rounded-md flex items-center gap-1"
+                  onClick={() => handleDeleteRow(tab, row)}
+                  title="Delete"
+                >
+                  <FaTrash className="text-xs" />
+                </button>
               </div>
             </td>
           </tr>
@@ -516,7 +383,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {/* Academic Background */}
           {activeTab === 'Academic Background' && (
             <div className="w-full">
-              {renderTabHeader('Academic Background', 'Add Academic', () => handleAddRow('Academic Background'))}
+              {renderTabHeader('Academic Background', 'Add Academic', () => {
+                // Add your add logic here
+              })}
               {renderEditableTable(
                 ['Period', 'School', 'Major/Degree', 'Graduation'],
                 ['period', 'school', 'degree', 'graduation'],
@@ -530,7 +399,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {/* Family Details */}
           {activeTab === 'Family Details' && (
             <div className="w-full">
-              {renderTabHeader('Family Details', 'Add Family Member', () => handleAddRow('Family Details'))}
+              {renderTabHeader('Family Details', 'Add Family Member', () => {
+                // Add your add logic here
+              })}
               {renderEditableTable(
                 ['Relation', 'Name', 'Birthday', 'Blessing'],
                 ['relation', 'name', 'birthday', 'blessing'],
@@ -544,7 +415,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {/* Public Mission Post Held */}
           {activeTab === 'Public Mission Post Held' && (
             <div className="w-full">
-              {renderTabHeader('Public Mission Post Held', 'Add Mission Post', () => handleAddRow('Public Mission Post Held'))}
+              {renderTabHeader('Public Mission Post Held', 'Add Mission Post', () => {
+                // Add your add logic here
+              })}
               {renderEditableTable(
                 ['Period', 'Organization', 'Final Position', 'Department', 'Description'],
                 ['period', 'organization', 'final_position', 'department', 'description'],
@@ -558,7 +431,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {/* Work Experience */}
           {activeTab === 'Work Experience' && (
             <div className="w-full">
-              {renderTabHeader('Work Experience', 'Add Experience', () => handleAddRow('Work Experience'))}
+              {renderTabHeader('Work Experience', 'Add Experience', () => {
+                // Add your add logic here
+              })}
               {renderEditableTable(
                 ['Period', 'Organization Name', 'Final Position', 'Department', 'Job Description'],
                 ['period', 'organization_name', 'final_position', 'department', 'job_description'],
@@ -573,7 +448,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {activeTab === 'Training & Qualifications' && (
           <div className="w-full">
             {/* Training Courses Section */}
-            {renderTabHeader('Training Courses', 'Add Training', () => handleAddRow('Training & Qualifications'))}
+            {renderTabHeader('Training Courses', 'Add Training', () => {
+              // Add your add logic here
+            })}
             {renderEditableTable(
               ['Type', 'Name of Course', 'Period', 'Organization', 'Status'],
               ['type', 'name_of_course', 'period', 'organization', 'status'],
@@ -583,7 +460,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             )}
 
             {/* Qualifications Section */}
-            {renderTabHeader('Professional Qualifications', 'Add Qualification', () => handleAddRow('Qualifications'))}
+            {renderTabHeader('Professional Qualifications', 'Add Qualification', () => {
+              // Add your add logic here
+            })}
             {renderEditableTable(
       ['Date of Acquisition', 'Name of Qualification', 'Remarks'],
       ['date_acquisition', 'name_qualification', 'remarks'],
@@ -598,7 +477,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {activeTab === 'Awards & Penalties' && (
             <div className="w-full space-y-8">
               <div>
-                {renderTabHeader('Awards', 'Add Award', () => handleAddRow('Awards'))}
+                {renderTabHeader('Awards', 'Add Award', () => {
+                  // Add your add logic here
+                })}
                 {renderEditableTable(
                   ['Date', 'Type', 'Description', 'Organization'],
                   ['date', 'type', 'description', 'organization'],
@@ -608,7 +489,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
                 )}
               </div>
               <div>
-                {renderTabHeader('Disciplinary Actions', 'Add Disciplinary Action', () => handleAddRow('Disciplinary Actions'))}
+                {renderTabHeader('Disciplinary Actions', 'Add Disciplinary Action', () => {
+                  // Add your add logic here
+                })}
                 {renderEditableTable(
                   ['Date', 'Reason'],
                   ['date', 'reason'],
@@ -623,7 +506,9 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {/* Special Notes */}
           {activeTab === 'Special Notes' && (
             <div className="w-full">
-              {renderTabHeader('Special Notes', 'Add Note', () => handleAddRow('Special Notes'))}
+              {renderTabHeader('Special Notes', 'Add Note', () => {
+                // Add your add logic here
+              })}
               {renderEditableTable(
                 ['Date Written', 'Details'],
                 ['date_written', 'details'],

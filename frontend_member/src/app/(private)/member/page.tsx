@@ -13,6 +13,8 @@ function UserPage() {
   const [month, setMonth] = useState('All Months');
   const [region, setRegion] = useState('All Region');
   const [nation, setNation] = useState('All Nations');
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 50;
 
   useEffect(() => {
     axios.get('https://directorybackend-production.up.railway.app/directory/members/')
@@ -53,6 +55,20 @@ function UserPage() {
 
     return matchesSearch && matchesRegion && matchesNation && matchesMonth;
   });
+
+  const totalPages = Math.ceil(filteredMembers.length / rowsPerPage);
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
 
   return (
     <div>
@@ -128,52 +144,78 @@ function UserPage() {
 
         {/* Table Section */}
         <div className="overflow-x-auto mt-10">
-          <table className="min-w-full bg-white text-sm text-center border border-gray-200 rounded-md overflow-hidden">
-            <thead className="bg-[#245AD2] text-white">
-              {/* Info Row */}
-              <tr className="border-b bg-white text-black text-[1px] ">
-                <th colSpan="7" className="px-4 py-2">
-                  <div className="flex justify-between text-xs text-gray-600 font-light">
-                    <span>Showing {filteredMembers.length > 0 ? `1–${Math.min(10, filteredMembers.length)} of ${filteredMembers.length} members` : 'No members'} </span>
-                    <span>Page 1 of {Math.ceil(filteredMembers.length / 10) || 1}</span>
-                  </div>
-                </th>
-              </tr>
-              <tr>
-                <th className="px-4 py-2 rounded-l-lg">Name</th>
-                <th className="px-4 py-2">Region</th>
-                <th className="px-4 py-2">Nation</th>
-                <th className="px-4 py-2">Organization</th>
-                <th className="px-4 py-2">Department</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2 rounded-r-lg">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMembers.slice(0, 10).map((member) => (
-                <tr key={member.id || member.email} className="border-t hover:bg-gray-100">
-                  <td className="px-4 py-2">{member.full_name}</td>
-                  <td className="px-4 py-2">{member.region}</td>
-                  <td className="px-4 py-2">{member.nation}</td>
-                  <td className="px-4 py-2">{member.organization}</td>
-                  <td className="px-4 py-2">{member.department}</td>
-                  <td className="px-4 py-2">{member.email}</td>
-                  <td className="px-4 py-2">
-                    <div className="flex justify-center">
-                      <button
-                        onClick={() => handleView(member)}
-                        className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
-                        style={{ backgroundColor: '#066DC7' }}
-                      >
-                        <FaEye className="text-sm" />
-                        View
-                      </button>
+          <div className="max-h-[600px] overflow-y-auto">
+            <table className="min-w-full bg-white text-sm text-center border border-gray-200 rounded-md overflow-hidden">
+              <thead className="bg-[#245AD2] text-white">
+                {/* Info Row */}
+                <tr className="border-b bg-white text-black text-[1px] ">
+                  <th colSpan="7" className="px-4 py-2">
+                    <div className="flex justify-between text-xs text-gray-600 font-light">
+                      <span>
+                        Showing {filteredMembers.length > 0
+                          ? `${(currentPage - 1) * rowsPerPage + 1}–${Math.min(currentPage * rowsPerPage, filteredMembers.length)} of ${filteredMembers.length} members`
+                          : 'No members'}
+                      </span>
+                      <span>
+                        Page {currentPage} of {totalPages || 1}
+                      </span>
                     </div>
-                  </td>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                <tr>
+                  <th className="px-4 py-2 rounded-l-lg">Name</th>
+                  <th className="px-4 py-2">Region</th>
+                  <th className="px-4 py-2">Nation</th>
+                  <th className="px-4 py-2">Organization</th>
+                  <th className="px-4 py-2">Department</th>
+                  <th className="px-4 py-2">Email</th>
+                  <th className="px-4 py-2 rounded-r-lg">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedMembers.map((member) => (
+                  <tr key={member.id || member.email} className="border-t hover:bg-gray-100">
+                    <td className="px-4 py-2">{member.full_name}</td>
+                    <td className="px-4 py-2">{member.region}</td>
+                    <td className="px-4 py-2">{member.nation}</td>
+                    <td className="px-4 py-2">{member.organization}</td>
+                    <td className="px-4 py-2">{member.department}</td>
+                    <td className="px-4 py-2">{member.email}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex justify-center">
+                        <button
+                          onClick={() => handleView(member)}
+                          className="flex items-center gap-2 px-3 py-1 rounded-md text-white transition hover:brightness-110 hover:shadow-md"
+                          style={{ backgroundColor: '#066DC7' }}
+                        >
+                          <FaEye className="text-sm" />
+                          View
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination Controls */}
+          <div className="flex justify-end items-center gap-2 mt-2">
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span className="text-sm">{currentPage} / {totalPages || 1}</span>
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {/* Modal */}

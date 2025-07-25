@@ -31,8 +31,6 @@ const MemberAddModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('Personal & Contact');
   const [formData, setFormData] = useState({});
   const [memberId, setMemberId] = useState(null);
-
-  // Tab states
   const [tabRows, setTabRows] = useState({
     'Academic Background': [],
     'Family Details': [],
@@ -44,6 +42,9 @@ const MemberAddModal = ({ isOpen, onClose }) => {
     'Disciplinary Actions': [],
     'Special Notes': [],
   });
+
+  // Helper to refresh the page
+  const refreshPage = () => window.location.reload();
 
   // Personal tab input handler
   const handleInputChange = (key, value) => {
@@ -62,20 +63,26 @@ const MemberAddModal = ({ isOpen, onClose }) => {
 
   // In handleCreateMember, format date fields before POST
   const handleCreateMember = async () => {
-    // List all date keys used in Personal & Contact
-    const dateKeys = ['birthday', 'dateOfJoining'];
-    const formattedData = { ...formData };
-    dateKeys.forEach(key => {
-      if (formattedData[key]) {
-        formattedData[key] = formatDate(formattedData[key]);
-      }
-    });
+    const formattedData = {
+      ...formData,
+      profile_photo_url: formData.profile_photo_url || 'image/upload/v1752898165/dzsy9fyzangiwwr9x5va.png',
+      is_deleted: false,
+    };
+
+    // Validation for required fields
+    if (!formattedData.full_name || !formattedData.email || !formattedData.birthday || !formattedData.date_of_joining || !formattedData.phone_no) {
+      alert('Please fill all required fields: Name, Email, Birthday, Date of Joining, Phone Number');
+      return;
+    }
+
     try {
       const res = await axios.post(`${API_BASE}/members/create/`, formattedData);
       setMemberId(res.data.member_id);
       alert('Member created! You can now add details in other tabs.');
-    } catch {
-      alert('Failed to create member!');
+      refreshPage(); // Refresh after creating member
+    } catch (err) {
+      alert('Failed to create member! ' + (err.response?.data?.detail || 'Check required fields and formats.'));
+      console.error(err.response?.data); // See backend error details in console
     }
   };
 
@@ -85,6 +92,7 @@ const MemberAddModal = ({ isOpen, onClose }) => {
       ...prev,
       [tab]: [...prev[tab], { ...emptyRows[tab] }],
     }));
+    refreshPage(); // Refresh after adding row
   };
 
   // Table input change
@@ -94,6 +102,7 @@ const MemberAddModal = ({ isOpen, onClose }) => {
       newRows[idx][key] = value;
       return { ...prev, [tab]: newRows };
     });
+    refreshPage(); // Refresh after editing row
   };
 
   // In handleCreateRow, format date fields before POST
@@ -159,6 +168,7 @@ const MemberAddModal = ({ isOpen, onClose }) => {
         ...prev,
         [tab]: prev[tab].filter((_, i) => i !== idx),
       }));
+      refreshPage(); // Refresh after creating row
     } catch {
       alert('Create failed!');
     }
@@ -283,17 +293,17 @@ const MemberAddModal = ({ isOpen, onClose }) => {
                     { label: 'Region', key: 'region' },
                     { label: 'Nation', key: 'nation' },
                     { label: 'Nationality', key: 'nationality' },
-                    { label: 'Birthday', key: 'birthday', type: 'date' },
+                    { label: 'Birthday', key: 'birthday', placeholder: 'YYYY-MM-DD' },
                     { label: 'Gender', key: 'gender', type: 'select', options: ['Male', 'Female', 'Other'] },
                     { label: 'Department', key: 'department' },
                     { label: 'Organization', key: 'organization' },
-                    { label: 'Current Post', key: 'currentPost' },
+                    { label: 'Current Post', key: 'current_post' },
                     { label: 'Position Title', key: 'position' },
                     { label: 'Blessing', key: 'blessing' },
-                    { label: 'Date of Joining', key: 'dateOfJoining', type: 'date' },
-                    { label: 'Phone Number', key: 'phone' },
+                    { label: 'Date of Joining', key: 'date_of_joining', placeholder: 'YYYY-MM-DD' },
+                    { label: 'Phone Number', key: 'phone_no' },
                     { label: 'Address', key: 'address' },
-                  ].map(({ label, key, type, options }) => (
+                  ].map(({ label, key, type, options, placeholder }) => (
                     <div key={key} className="flex items-center gap-2">
                       <label className="w-40 font-semibold">{label}:</label>
                       {type === 'select' ? (
@@ -309,10 +319,11 @@ const MemberAddModal = ({ isOpen, onClose }) => {
                         </select>
                       ) : (
                         <input
-                          type={type || 'text'}
+                          type="text"
                           className="border border-gray-300 rounded px-2 py-1 w-full"
                           value={formData[key] || ''}
                           onChange={(e) => handleInputChange(key, e.target.value)}
+                          placeholder={placeholder || ''}
                         />
                       )}
                     </div>
