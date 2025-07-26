@@ -217,7 +217,7 @@ const Modal = ({ isOpen, onClose, member }) => {
                     <tr key={idx} className="border-t hover:bg-gray-100">
                       <td className="px-4 py-2 whitespace-nowrap">{item.relation}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{item.name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap">{item.birth_date}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{item.birthday}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{item.blessing}</td>
                     </tr>
                   )) : (

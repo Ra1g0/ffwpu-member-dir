@@ -1,9 +1,11 @@
-
 body {
   display: flex;
-  min-width: 320px;
-  min-height: 100vh;
+  min-width: 100px;
+  height: 100vh;
   background-color: #064983;
   font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-y: hidden; /* Removes vertical scrollbar */
+  overflow-x: auto;   /* Keeps horizontal scrolling for mobile */
 }
-
