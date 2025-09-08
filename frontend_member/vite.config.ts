@@ -8,5 +8,5 @@ export default defineConfig({
   plugins: [react(), 
     tailwindcss()
   ],
-  base: process.env.VITE_BASE_PATH || '/ffwpu-member-dir',
+  base: '/ffwpu-member-dir',
 })
