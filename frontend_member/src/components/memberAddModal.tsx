@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { FaPlus, FaCloudUploadAlt, FaSpinner } from 'react-icons/fa';
 
-const API_BASE = 'https://directorybackend-production.up.railway.app/directory';
+const API_BASE = 'https://ffwpu-member-dir.up.railway.app/directory';
 const CLOUDINARY_UPLOAD_PRESET = 'members_uploads'; 
 const CLOUDINARY_CLOUD_NAME = 'debx9uf7g';
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;

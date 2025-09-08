@@ -8,7 +8,7 @@ import MemberEditModal from '../../../components/memberEditModal.tsx';
 import MemberAddModal from '../../../components/memberAddModal.tsx';
 
 function MemberPage() {
-  const API_BASE = 'https://directorybackend-production.up.railway.app/directory';
+  const API_BASE = 'https://ffwpu-member-dir.up.railway.app/directory';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

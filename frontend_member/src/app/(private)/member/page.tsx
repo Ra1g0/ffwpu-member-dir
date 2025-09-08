@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from '../../../components/header.tsx';
-import Sidebar from '../../../components/sidebar.tsx';
+import Sidebar1 from '../../../components/sidebar1.tsx';
 import { FaEye } from 'react-icons/fa';
 import Modal from '../../../components/memberListModal.tsx';
 
@@ -15,7 +15,7 @@ function UserPage() {
   const [nation, setNation] = useState('All Nations');
 
   useEffect(() => {
-    axios.get('https://directorybackend-production.up.railway.app/directory/members/')
+    axios.get('https://ffwpu-member-dir.up.railway.app/directory/members/')
       .then(res => setMembers(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -57,7 +57,7 @@ function UserPage() {
   return (
     <div>
       <Header />
-      <Sidebar />
+      <Sidebar1 />
 
       <div className="mt-[100px] mb-[28rem] md:ml-[250px] ml-12 p-4 w-[1250px]">
         {/* Top Section */}

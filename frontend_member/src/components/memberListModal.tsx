@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'https://directorybackend-production.up.railway.app/directory';
+const API_BASE = 'https://ffwpu-member-dir.up.railway.app/directory';
 
 const profileTabs = [
   'Personal & Contact',

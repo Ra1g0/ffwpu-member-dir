@@ -9,16 +9,28 @@ function Header() {
 
   const handleLogout = async () => {
     try {
-      await fetch('https://directorybackend-production.up.railway.app/directory/auth/logout/', {
+      const token = localStorage.getItem('authToken'); // Retrieve the token from localStorage
+      // Send logout request to the backend
+      const response = await fetch('https://ffwpu-member-dir.up.railway.app/directory/auth/logout/', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Include the token
         },
       });
-      window.location.href = '/login';
+
+      if (response.ok) {
+        // Clear local storage or any user-related data
+        localStorage.clear();
+
+        // Redirect to the login page
+        window.location.href = '/login';
+      } else {
+        alert('Logout failed. Please try again.');
+      }
     } catch (err) {
-      alert('Logout failed.');
+      console.error(err);
+      alert('An error occurred while logging out.');
     }
   };
 
