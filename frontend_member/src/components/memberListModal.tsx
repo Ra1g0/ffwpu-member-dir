@@ -14,56 +14,101 @@ const profileTabs = [
   'Special Notes',
 ];
 
-const Modal = ({ isOpen, onClose, member }) => {
-  const [activeTab, setActiveTab] = useState('Personal & Contact');
-  const [academic, setAcademic] = useState([]);
-  const [family, setFamily] = useState([]);
-  const [publicMission, setPublicMission] = useState([]);
-  const [work, setWork] = useState([]);
-  const [training, setTraining] = useState([]);
-  const [qualifications, setQualifications] = useState([]);
-  const [awards, setAwards] = useState([]);
-  const [disciplinary, setDisciplinary] = useState([]);
-  const [specialNotes, setSpecialNotes] = useState([]);
-  const [memberDetails, setMemberDetails] = useState(null);
+// Define the types for props and data
+interface Member {
+  member_id: string;
+  full_name?: string;
+  email?: string;
+  region?: string;
+  nation?: string;
+  nationality?: string;
+  birthday?: string;
+  gender?: string;
+  department?: string;
+  organization?: string;
+  current_post?: string;
+  position_title?: string;
+  blessing?: string;
+  date_of_joining?: string;
+  phone_number?: string;
+  address?: string;
+  profile_photo_url?: string;
+}
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  member: Member | null;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, member }) => {
+  const [activeTab, setActiveTab] = useState<string>('Personal & Contact');
+  const [academic, setAcademic] = useState<any[]>([]);
+  const [family, setFamily] = useState<any[]>([]);
+  const [publicMission, setPublicMission] = useState<any[]>([]);
+  const [work, setWork] = useState<any[]>([]);
+  const [training, setTraining] = useState<any[]>([]);
+  const [qualifications, setQualifications] = useState<any[]>([]);
+  const [awards, setAwards] = useState<any[]>([]);
+  const [disciplinary, setDisciplinary] = useState<any[]>([]);
+  const [specialNotes, setSpecialNotes] = useState<any[]>([]);
+  const [memberDetails, setMemberDetails] = useState<Member | null>(null);
 
   useEffect(() => {
     if (!member?.member_id) return;
 
-    // Fetch all members and find the selected member for Personal & Contact tab
-    if (activeTab === 'Personal & Contact') {
-      axios
-        .get(`${API_BASE}/members/`)
-        .then(res => {
-          const found = res.data.find((m) => m.member_id === member.member_id);
+    const fetchData = async () => {
+      try {
+        if (activeTab === 'Personal & Contact') {
+          const res = await axios.get(`${API_BASE}/members/`);
+          const found = res.data.find((m: Member) => m.member_id === member.member_id);
           setMemberDetails(found || null);
-        })
-        .catch(err => console.error(err));
-    }
+        }
 
-    if (activeTab === 'Academic Background') {
-      axios.get(`${API_BASE}/members/${member.member_id}/academic-background/`).then(res => setAcademic(res.data));
-    }
-    if (activeTab === 'Family Details') {
-      axios.get(`${API_BASE}/members/${member.member_id}/family-details/`).then(res => setFamily(res.data));
-    }
-    if (activeTab === 'Public Mission Post Held') {
-      axios.get(`${API_BASE}/members/${member.member_id}/public-mission-posts/`).then(res => setPublicMission(res.data));
-    }
-    if (activeTab === 'Work Experience') {
-      axios.get(`${API_BASE}/members/${member.member_id}/work-experiences/`).then(res => setWork(res.data));
-    }
-    if (activeTab === 'Training & Qualifications') {
-      axios.get(`${API_BASE}/members/${member.member_id}/training-courses/`).then(res => setTraining(res.data));
-      axios.get(`${API_BASE}/members/${member.member_id}/qualifications/`).then(res => setQualifications(res.data));
-    }
-    if (activeTab === 'Awards & Penalties') {
-      axios.get(`${API_BASE}/members/${member.member_id}/awards-recognition/`).then(res => setAwards(res.data));
-      axios.get(`${API_BASE}/members/${member.member_id}/disciplinary-actions/`).then(res => setDisciplinary(res.data));
-    }
-    if (activeTab === 'Special Notes') {
-      axios.get(`${API_BASE}/members/${member.member_id}/special-note/`).then(res => setSpecialNotes(res.data));
-    }
+        if (activeTab === 'Academic Background') {
+          const res = await axios.get(`${API_BASE}/members/${member.member_id}/academic-background/`);
+          setAcademic(res.data);
+        }
+
+        if (activeTab === 'Family Details') {
+          const res = await axios.get(`${API_BASE}/members/${member.member_id}/family-details/`);
+          setFamily(res.data);
+        }
+
+        if (activeTab === 'Public Mission Post Held') {
+          const res = await axios.get(`${API_BASE}/members/${member.member_id}/public-mission-posts/`);
+          setPublicMission(res.data);
+        }
+
+        if (activeTab === 'Work Experience') {
+          const res = await axios.get(`${API_BASE}/members/${member.member_id}/work-experiences/`);
+          setWork(res.data);
+        }
+
+        if (activeTab === 'Training & Qualifications') {
+          const trainingRes = await axios.get(`${API_BASE}/members/${member.member_id}/training-courses/`);
+          const qualificationsRes = await axios.get(`${API_BASE}/members/${member.member_id}/qualifications/`);
+          setTraining(trainingRes.data);
+          setQualifications(qualificationsRes.data);
+        }
+
+        if (activeTab === 'Awards & Penalties') {
+          const awardsRes = await axios.get(`${API_BASE}/members/${member.member_id}/awards-recognition/`);
+          const disciplinaryRes = await axios.get(`${API_BASE}/members/${member.member_id}/disciplinary-actions/`);
+          setAwards(awardsRes.data);
+          setDisciplinary(disciplinaryRes.data);
+        }
+
+        if (activeTab === 'Special Notes') {
+          const res = await axios.get(`${API_BASE}/members/${member.member_id}/special-note/`);
+          setSpecialNotes(res.data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
   }, [activeTab, member]);
 
   if (!isOpen) return null;
@@ -84,7 +129,7 @@ const Modal = ({ isOpen, onClose, member }) => {
           overflow-y-auto sm:overflow-visible
           max-h-[90vh] sm:max-h-none
         `}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
@@ -100,7 +145,7 @@ const Modal = ({ isOpen, onClose, member }) => {
         {/* Tabs */}
         <div className="border-b border-gray-300 mb-4 overflow-x-auto sm:overflow-visible">
           <ul className="flex flex-nowrap sm:flex-wrap gap-2 text-xs sm:text-sm font-medium w-max sm:w-auto">
-            {profileTabs.map(tab => (
+            {profileTabs.map((tab) => (
               <li
                 key={tab}
                 className={`whitespace-nowrap cursor-pointer px-3 py-2 rounded-t-md ${
@@ -121,16 +166,16 @@ const Modal = ({ isOpen, onClose, member }) => {
           <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-16 px-4 sm:px-12">
             <div className="flex flex-col w-full sm:w-1/3 h-full">
               <div className="flex flex-col items-center sm:items-center text-center sm:text-left">
-            <img
-              src={
-                memberDetails?.profile_photo_url
-                  ? `https://res.cloudinary.com/debx9uf7g/${memberDetails.profile_photo_url}`
-                  : "https://ui-avatars.com/api/?name=No+Photo"
-              }
-              alt="Profile"
-              className="w-32 h-32 sm:w-70 sm:h-70 rounded-full object-cover shadow mx-auto sm:mx-0"
-            />
-          </div>
+                <img
+                  src={
+                    memberDetails?.profile_photo_url
+                      ? `https://res.cloudinary.com/debx9uf7g/${memberDetails.profile_photo_url}`
+                      : 'https://ui-avatars.com/api/?name=No+Photo'
+                  }
+                  alt="Profile"
+                  className="w-32 h-32 sm:w-70 sm:h-70 rounded-full object-cover shadow mx-auto sm:mx-0"
+                />
+              </div>
             </div>
 
             {/* RIGHT SECTION */}
@@ -139,28 +184,72 @@ const Modal = ({ isOpen, onClose, member }) => {
               <div className="flex-1 space-y-1">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Personal and Contact Details</h2>
                 <div className="space-y-2">
-                  <div className="flex"><strong className="w-40">Name:</strong><span>{memberDetails?.name || member?.full_name}</span></div>
-                  <div className="flex"><strong className="w-40">Email:</strong><span>{memberDetails?.email || member?.email}</span></div>
-                  <div className="flex"><strong className="w-40">Region:</strong><span>{memberDetails?.region || member?.region}</span></div>
-                  <div className="flex"><strong className="w-40">Nation:</strong><span>{memberDetails?.nation || member?.nation}</span></div>
-                  <div className="flex"><strong className="w-40">Nationality:</strong><span>{memberDetails?.nationality || 'Pilipino'}</span></div>
-                  <div className="flex"><strong className="w-40">Birthday:</strong><span>{memberDetails?.birthday }</span></div>
-                  <div className="flex"><strong className="w-40">Gender:</strong><span>{memberDetails?.gender || 'Male'}</span></div>
-                  <div className="flex"><strong className="w-40">Department:</strong><span>{memberDetails?.department || member?.department}</span></div>
+                  <div className="flex">
+                    <strong className="w-40">Name:</strong>
+                    <span>{memberDetails?.full_name || member?.full_name}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Email:</strong>
+                    <span>{memberDetails?.email || member?.email}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Region:</strong>
+                    <span>{memberDetails?.region || member?.region}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Nation:</strong>
+                    <span>{memberDetails?.nation || member?.nation}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Nationality:</strong>
+                    <span>{memberDetails?.nationality || 'Pilipino'}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Birthday:</strong>
+                    <span>{memberDetails?.birthday}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Gender:</strong>
+                    <span>{memberDetails?.gender || 'Male'}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Department:</strong>
+                    <span>{memberDetails?.department || member?.department}</span>
+                  </div>
                 </div>
               </div>
 
               {/* RIGHT - Organization Details */}
               <div className="flex-1 space-y-1">
                 <div className="space-y-2 mt-0 sm:mt-9 mb-4">
-                  <div className="flex"><strong className="w-40">Organization:</strong><span>{memberDetails?.organization || member?.organization}</span></div>
-                  <div className="flex"><strong className="w-40">Current Post:</strong><span>{memberDetails?.current_post || 'Quezon City'}</span></div>
-                  <div className="flex"><strong className="w-40">Position Title:</strong><span>{memberDetails?.position_title || 'Volunteer'}</span></div>
-                  <div className="flex"><strong className="w-40">Blessing:</strong><span>{memberDetails?.blessing || '1st Gen'}</span></div>
-                  <div className="flex"><strong className="w-40">Date of Joining:</strong><span>{memberDetails?.date_of_joining || '06/27/25'}</span></div>
-                  <div className="flex"><strong className="w-40">Email:</strong><span>{memberDetails?.email || member?.email}</span></div>
-                  <div className="flex"><strong className="w-40">Phone Number:</strong><span>{memberDetails?.phone_number || '09954487175'}</span></div>
-                  <div className="flex flex-wrap break-words"><strong className="w-40">Address:</strong><span className="flex-1 break-words">{memberDetails?.address || 'Quezon City'}</span></div>
+                  <div className="flex">
+                    <strong className="w-40">Organization:</strong>
+                    <span>{memberDetails?.organization || member?.organization}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Current Post:</strong>
+                    <span>{memberDetails?.current_post || 'Quezon City'}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Position Title:</strong>
+                    <span>{memberDetails?.position_title || 'Volunteer'}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Blessing:</strong>
+                    <span>{memberDetails?.blessing || '1st Gen'}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Date of Joining:</strong>
+                    <span>{memberDetails?.date_of_joining || '06/27/25'}</span>
+                  </div>
+                  <div className="flex">
+                    <strong className="w-40">Phone Number:</strong>
+                    <span>{memberDetails?.phone_number || '09954487175'}</span>
+                  </div>
+                  <div className="flex flex-wrap break-words">
+                    <strong className="w-40">Address:</strong>
+                    <span className="flex-1 break-words">{memberDetails?.address || 'Quezon City'}</span>
+                  </div>
                 </div>
               </div>
             </div>

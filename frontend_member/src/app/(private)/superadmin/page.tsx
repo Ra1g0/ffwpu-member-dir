@@ -7,19 +7,33 @@ import Modal from '../../../components/memberListModal.tsx';
 import MemberEditModal from '../../../components/memberEditModal.tsx';
 import MemberAddModal from '../../../components/memberAddModal.tsx';
 
+// Define the Member type
+interface Member {
+  member_id: string;
+  full_name?: string;
+  name?: string;
+  email?: string;
+  region?: string;
+  nation?: string;
+  organization?: string;
+  department?: string;
+  birthday?: string; // Assuming this is a date string
+  is_deleted?: boolean;
+}
+
 function MemberPage() {
   const API_BASE = 'https://ffwpu-member-dir.up.railway.app/directory';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [memberToDelete, setMemberToDelete] = useState(null);
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [month, setMonth] = useState('All Months');
   const [region, setRegion] = useState('All Region');
   const [nation, setNation] = useState('All Nations');
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
   const rowsPerPage = 50;
@@ -38,17 +52,17 @@ function MemberPage() {
     }
   };
 
-  const handleView = (member) => {
+  const handleView = (member: Member) => {
     setSelectedMember(member);
     setIsModalOpen(true);
   };
 
-  const handleEdit = (member) => {
+  const handleEdit = (member: Member) => {
     setSelectedMember(member);
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = (member) => {
+  const handleDeleteClick = (member: Member) => {
     if (!member || !member.member_id) {
       alert('Invalid member data');
       return;
@@ -62,26 +76,26 @@ function MemberPage() {
       alert('Invalid member data');
       return;
     }
-    
+
     try {
       setIsDeleting(true);
-      
+
       // Soft delete by setting is_deleted to true
       await axios.put(`${API_BASE}/members/${memberToDelete.member_id}/update/`, {
-        is_deleted: true
+        is_deleted: true,
       });
 
       // Update local state to reflect the deletion
-      const updatedMembers = members.map(m => 
+      const updatedMembers = members.map((m) =>
         m.member_id === memberToDelete.member_id ? { ...m, is_deleted: true } : m
       );
-      
+
       setMembers(updatedMembers);
       setIsDeleteModalOpen(false);
       setMemberToDelete(null);
-      
+
       alert('Member has been archived successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete error:', error);
       alert(`Failed to archive member: ${error.response?.data?.message || error.message}`);
     } finally {
@@ -102,17 +116,25 @@ function MemberPage() {
       member.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       member.email?.toLowerCase().includes(search.toLowerCase());
 
-    const matchesRegion =
-      region === 'All Region' || member.region === region;
+    const matchesRegion = region === 'All Region' || member.region === region;
 
-    const matchesNation =
-      nation === 'All Nations' || member.nation === nation;
+    const matchesNation = nation === 'All Nations' || member.nation === nation;
 
     let matchesMonth = true;
     if (month !== 'All Months' && member.birthday) {
       const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
       ];
       const memberMonth = monthNames[new Date(member.birthday).getMonth()];
       matchesMonth = memberMonth === month;
@@ -128,7 +150,7 @@ function MemberPage() {
   const currentRows = filteredMembers.slice(indexOfFirstRow, indexOfLastRow);
   const totalMembers = filteredMembers.length;
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
@@ -150,11 +172,9 @@ function MemberPage() {
       <div className="mt-[100px] mb-[28rem] md:ml-[250px] ml-12 p-4 w-[1250px]">
         {/* Top Section */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
-          <h2 className="text-2xl font-bold text-white drop-shadow-[0_0_1px_black]">
-            MEMBERS
-          </h2>
-          <button 
-            onClick={() => window.location.reload()}
+          <h2 className="text-2xl font-bold text-white drop-shadow-[0_0_1px_black]">MEMBERS</h2>
+          <button
+            onClick={handleRefresh}
             className="w-fit flex items-center gap-3 bg-white text-black px-10 py-1 rounded-md text-sm hover:bg-[#053969] hover:text-white transition"
           >
             <FaSyncAlt className="text-base" />
@@ -175,7 +195,7 @@ function MemberPage() {
             className="flex-1 min-w-[200px] border border-black rounded-md px-4 h-[32px] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          <select 
+          <select
             value={month}
             onChange={(e) => {
               setMonth(e.target.value);
@@ -198,7 +218,7 @@ function MemberPage() {
             <option>December</option>
           </select>
 
-          <select 
+          <select
             value={region}
             onChange={(e) => {
               setRegion(e.target.value);
@@ -212,7 +232,7 @@ function MemberPage() {
             <option>Mindanao</option>
           </select>
 
-          <select 
+          <select
             value={nation}
             onChange={(e) => {
               setNation(e.target.value);
@@ -240,12 +260,17 @@ function MemberPage() {
           <table className="min-w-full bg-white text-sm text-center border border-gray-200 rounded-md overflow-hidden">
             <thead className="bg-[#245AD2] text-white">
               <tr className="border-b bg-white text-black text-[1px]">
-                <th colSpan="8" className="px-4 py-2">
+                <th colSpan={8} className="px-4 py-2">
                   <div className="flex justify-between text-xs text-gray-600 font-light">
                     <span>
-                      Showing {totalMembers > 0 ? `${indexOfFirstRow + 1}–${Math.min(indexOfLastRow, totalMembers)} of ${totalMembers} members` : 'No members'}
+                      Showing{' '}
+                      {totalMembers > 0
+                        ? `${indexOfFirstRow + 1}–${Math.min(indexOfLastRow, totalMembers)} of ${totalMembers} members`
+                        : 'No members'}
                     </span>
-                    <span>Page {currentPage} of {totalPages || 1}</span>
+                    <span>
+                      Page {currentPage} of {totalPages || 1}
+                    </span>
                   </div>
                 </th>
               </tr>
@@ -308,11 +333,13 @@ function MemberPage() {
             <button
               onClick={goToPrevPage}
               disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-l-md border border-gray-300 ${currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#245AD2] text-white hover:bg-[#1a4aaf]'}`}
+              className={`px-3 py-1 rounded-l-md border border-gray-300 ${
+                currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#245AD2] text-white hover:bg-[#1a4aaf]'
+              }`}
             >
               <FaChevronLeft className="text-sm" />
             </button>
-            
+
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
               if (totalPages <= 5) {
@@ -324,22 +351,26 @@ function MemberPage() {
               } else {
                 pageNum = currentPage - 2 + i;
               }
-              
+
               return (
                 <button
                   key={pageNum}
                   onClick={() => paginate(pageNum)}
-                  className={`px-3 py-1 border-t border-b border-gray-300 ${currentPage === pageNum ? 'bg-[#245AD2] text-white' : 'bg-[#245AD2] text-white hover:bg-[#1a4aaf]'}`}
+                  className={`px-3 py-1 border-t border-b border-gray-300 ${
+                    currentPage === pageNum ? 'bg-[#245AD2] text-white' : 'bg-[#245AD2] text-white hover:bg-[#1a4aaf]'
+                  }`}
                 >
                   {pageNum}
                 </button>
               );
             })}
-            
+
             <button
               onClick={goToNextPage}
               disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded-r-md border border-gray-300 ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#245AD2] text-white hover:bg-[#1a4aaf]'}`}
+              className={`px-3 py-1 rounded-r-md border border-gray-300 ${
+                currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#245AD2] text-white hover:bg-[#1a4aaf]'
+              }`}
             >
               <FaChevronRight className="text-sm" />
             </button>
@@ -347,24 +378,20 @@ function MemberPage() {
         </div>
 
         {/* Modals */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          member={selectedMember}
-        />
-        
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} member={selectedMember} />
+
         <MemberEditModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           member={selectedMember}
-          onSave={(updatedMember) => {
-            const updatedMembers = members.map(m => 
+          onSave={(updatedMember: Member) => {
+            const updatedMembers = members.map((m) =>
               m.member_id === updatedMember.member_id ? updatedMember : m
             );
             setMembers(updatedMembers);
           }}
         />
-        
+
         {/* Delete Confirmation Modal */}
         {isDeleteModalOpen && (
           <div
@@ -376,7 +403,10 @@ function MemberPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-4">Archive Member</h3>
-              <p className="mb-6">Are you sure you want to archive {memberToDelete?.full_name || memberToDelete?.name}? This will remove them from the active members list.</p>
+              <p className="mb-6">
+                Are you sure you want to archive {memberToDelete?.full_name || memberToDelete?.name}? This will remove
+                them from the active members list.
+              </p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setIsDeleteModalOpen(false)}
@@ -387,7 +417,9 @@ function MemberPage() {
                 <button
                   onClick={confirmDelete}
                   disabled={isDeleting}
-                  className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${isDeleting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${
+                    isDeleting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
                 >
                   {isDeleting ? (
                     <>

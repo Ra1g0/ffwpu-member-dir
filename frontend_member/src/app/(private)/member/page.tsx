@@ -5,22 +5,35 @@ import Sidebar1 from '../../../components/sidebar1.tsx';
 import { FaEye } from 'react-icons/fa';
 import Modal from '../../../components/memberListModal.tsx';
 
+// Define the Member type
+interface Member {
+  id?: string;
+  full_name?: string;
+  email?: string;
+  region?: string;
+  nation?: string;
+  organization?: string;
+  department?: string;
+  birthday?: string; 
+}
+
 function UserPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [members, setMembers] = useState([]);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
   const [search, setSearch] = useState('');
   const [month, setMonth] = useState('All Months');
   const [region, setRegion] = useState('All Region');
   const [nation, setNation] = useState('All Nations');
 
   useEffect(() => {
-    axios.get('https://ffwpu-member-dir.up.railway.app/directory/members/')
-      .then(res => setMembers(res.data))
-      .catch(err => console.error(err));
+    axios
+      .get('https://ffwpu-member-dir.up.railway.app/directory/members/')
+      .then((res) => setMembers(res.data))
+      .catch((err) => console.error(err));
   }, []);
 
-  const handleView = (member) => {
+  const handleView = (member: Member) => {
     setSelectedMember(member);
     setIsModalOpen(true);
   };
@@ -80,13 +93,13 @@ function UserPage() {
             placeholder="Search"
             className="flex-1 min-w-[200px] border border-black rounded-md px-4 h-[32px] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
 
           <select
             className="border border-black rounded-md px-6 h-[32px] text-sm bg-white cursor-pointer"
             value={month}
-            onChange={e => setMonth(e.target.value)}
+            onChange={(e) => setMonth(e.target.value)}
           >
             <option>All Months</option>
             <option>January</option>
@@ -106,7 +119,7 @@ function UserPage() {
           <select
             className="border border-black rounded-md px-6 h-[32px] text-sm bg-white cursor-pointer"
             value={region}
-            onChange={e => setRegion(e.target.value)}
+            onChange={(e) => setRegion(e.target.value)}
           >
             <option>All Region</option>
             <option>Luzon</option>
@@ -117,7 +130,7 @@ function UserPage() {
           <select
             className="border border-black rounded-md px-6 h-[32px] text-sm bg-white cursor-pointer"
             value={nation}
-            onChange={e => setNation(e.target.value)}
+            onChange={(e) => setNation(e.target.value)}
           >
             <option>All Nations</option>
             <option>Philippines</option>
@@ -132,10 +145,19 @@ function UserPage() {
             <thead className="bg-[#245AD2] text-white">
               {/* Info Row */}
               <tr className="border-b bg-white text-black text-[1px] ">
-                <th colSpan="7" className="px-4 py-2">
+                <th colSpan={7} className="px-4 py-2">
                   <div className="flex justify-between text-xs text-gray-600 font-light">
-                    <span>Showing {filteredMembers.length > 0 ? `1–${Math.min(10, filteredMembers.length)} of ${filteredMembers.length} members` : 'No members'} </span>
-                    <span>Page 1 of {Math.ceil(filteredMembers.length / 10) || 1}</span>
+                    <span>
+                      Showing{' '}
+                      {filteredMembers.length > 0
+                        ? `1–${Math.min(10, filteredMembers.length)} of ${
+                            filteredMembers.length
+                          } members`
+                        : 'No members'}{' '}
+                    </span>
+                    <span>
+                      Page 1 of {Math.ceil(filteredMembers.length / 10) || 1}
+                    </span>
                   </div>
                 </th>
               </tr>
@@ -151,7 +173,10 @@ function UserPage() {
             </thead>
             <tbody>
               {filteredMembers.slice(0, 10).map((member) => (
-                <tr key={member.id || member.email} className="border-t hover:bg-gray-100">
+                <tr
+                  key={member.id || member.email}
+                  className="border-t hover:bg-gray-100"
+                >
                   <td className="px-4 py-2">{member.full_name}</td>
                   <td className="px-4 py-2">{member.region}</td>
                   <td className="px-4 py-2">{member.nation}</td>
