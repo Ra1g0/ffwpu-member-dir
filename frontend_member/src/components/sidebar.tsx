@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
 
