@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (permission) {
       setPermission(permission);
-      localStorage.setItem("permission", permission);
+      localStorage.setItem("permission", permission); 
     }
   };
 

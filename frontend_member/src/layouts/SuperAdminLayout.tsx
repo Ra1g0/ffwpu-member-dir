@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom"
-import Sidebar1 from "../components/sidebar1" // adjust path if needed
+import { Outlet } from "react-router-dom";
+import Sidebar1 from "../components/sidebar1";
 
 export default function SuperAdminLayout() {
   return (
@@ -9,5 +9,5 @@ export default function SuperAdminLayout() {
         <Outlet />
       </div>
     </div>
-  )
+  );
 }

@@ -3,8 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./app/(private)/login/page";
 import ForgotPassword from "./app/(private)/login/forgatpass/page";
 import DashboardPage from "./app/(private)/dashboard/page";
-import MemberPage from "./app/(private)/member/page";
-import SuperAdminPage from "./app/(private)/superadmin/page";
+import UserPage from "./app/(private)/member/page";
+import MemberPage from "./app/(private)/superadmin/page";
 
 import MemberLayout from "./layouts/MemberLayout";
 import SuperAdminLayout from "./layouts/SuperAdminLayout";
@@ -41,12 +41,12 @@ function App() {
 
       {/* Member-only */}
       <Route element={<MemberLayout />}>
-        <Route path="/member" element={<MemberPage />} />
+        <Route path="/member" element={<UserPage/>} />
       </Route>
 
       {/* Superadmin-only */}
       <Route element={<SuperAdminLayout />}>
-        <Route path="/superadmin" element={<SuperAdminPage />} />
+        <Route path="/superadmin" element={<MemberPage  />} />
       </Route>
 
       {/* Catch-all */}

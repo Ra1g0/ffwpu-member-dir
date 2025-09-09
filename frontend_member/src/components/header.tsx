@@ -89,11 +89,14 @@ function Header() {
                     Log out
                   </button>
                   <button
-                    className="mt-2 text-sm text-gray-500 hover:underline"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </button>
+                  className="mt-2 text-sm text-gray-500 hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent parent click handlers from firing
+                    setShowModal(false);
+                  }}
+                >
+                  Cancel
+                </button>
                 </div>
               </div>
             )}
