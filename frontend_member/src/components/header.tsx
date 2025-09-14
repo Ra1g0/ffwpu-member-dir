@@ -8,32 +8,37 @@ function Header() {
   const [showModal, setShowModal] = useState(false);
   const [userName, setUserName] = useState('');
 
+  // Fetch user account data
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) return;
-
-        const res = await fetch('https://ffwpu-member-dir.up.railway.app/directory/accounts/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          // Assuming the response is an object and has "name" field
-          setUserName(data.name || '');
-        } else {
-          console.error('Failed to fetch user account');
-        }
-      } catch (err) {
-        console.error(err);
+  const fetchUser = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.log('No token found');
+        return;
       }
-    };
 
-    fetchUser();
-  }, []);
+      const res = await fetch('https://ffwpu-member-dir.up.railway.app/directory/accounts/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      console.log('API response:', data); // 🟢 check what this looks like
+
+      if (Array.isArray(data)) {
+        setUserName(data[0]?.name || '');
+      } else {
+        setUserName(data.name || '');
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+    }
+  };
+
+  fetchUser();
+}, []);
 
   const handleLogout = async () => {
     try {
