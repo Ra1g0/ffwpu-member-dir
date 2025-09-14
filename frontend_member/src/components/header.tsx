@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import logo from '../assets/headbar/logo.png';
 import bellIcon from '../assets/headbar/Bell.png';
 import calendarIcon from '../assets/headbar/Calendar.png';
@@ -6,24 +6,48 @@ import chatIcon from '../assets/headbar/Chat.png';
 
 function Header() {
   const [showModal, setShowModal] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const res = await fetch('https://ffwpu-member-dir.up.railway.app/directory/accounts/', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          // Assuming the response is an object and has "name" field
+          setUserName(data.name || '');
+        } else {
+          console.error('Failed to fetch user account');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('authToken'); // Retrieve the token from localStorage
-      // Send logout request to the backend
+      const token = localStorage.getItem('authToken');
       const response = await fetch('https://ffwpu-member-dir.up.railway.app/directory/auth/logout/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Include the token
+          'Authorization': `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
-        // Clear local storage or any user-related data
         localStorage.clear();
-
-        // Redirect to the login page
         window.location.href = '/login';
       } else {
         alert('Logout failed. Please try again.');
@@ -51,34 +75,18 @@ function Header() {
 
         {/* Right Section */}
         <div className="flex items-center gap-2 sm:gap-4 md:mr-[-5rem]">
-          <img
-            src={calendarIcon}
-            alt="Calendar"
-            className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer hover:brightness-75 transition"
-          /> 
-          <img
-            src={chatIcon}
-            alt="Chat"
-            className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer hover:brightness-75 transition"
-          /> 
-          <img
-            src={bellIcon}
-            alt="Bell"
-            className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer hover:brightness-75 transition"
-          />
-
           {/* Username as Modal Trigger */}
           <div
             className="relative flex items-center gap-2 text-sm font-normal text-[#064983] border border-black rounded-full px-3 py-1 bg-white hover:bg-gray-100 transition cursor-pointer"
             onClick={() => setShowModal(true)}
           >
             <img src={logo} alt="User" className="w-6 h-6 rounded-full object-cover" />
-            <span>JohnRegory</span>
+            <span>{userName || 'Loading...'}</span>
+
             {/* Modal */}
             {showModal && (
               <div className="absolute left-1/2 top-full z-50 flex flex-col items-center"
                    style={{ transform: 'translateX(-50%)', marginTop: '8px' }}>
-                {/* Triangle */}
                 <div className="w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-white mb-[-2px]" />
                 <div className="bg-white rounded-lg shadow-lg p-6 min-w-[250px] flex flex-col items-center">
                   <span className="mb-4 text-lg font-semibold text-[#064983]">Account</span>
@@ -89,14 +97,14 @@ function Header() {
                     Log out
                   </button>
                   <button
-                  className="mt-2 text-sm text-gray-500 hover:underline"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent parent click handlers from firing
-                    setShowModal(false);
-                  }}
-                >
-                  Cancel
-                </button>
+                    className="mt-2 text-sm text-gray-500 hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowModal(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
