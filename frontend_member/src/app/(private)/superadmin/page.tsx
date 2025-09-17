@@ -167,7 +167,7 @@ function MemberPage() {
   return (
     <div>
       <Header />
-      <Sidebar />
+      
 
       <div className="mt-[100px] mb-[28rem] md:ml-[250px] ml-12 p-4 w-[1250px]">
         {/* Top Section */}

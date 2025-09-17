@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../components/sidebar";
+import Sidebar1 from "../components/sidebar1";
 
 export default function MemberLayout() {
   console.log("MemberLayout rendered");
@@ -7,7 +7,7 @@ export default function MemberLayout() {
 
   return (
     <div className="flex">
-      <Sidebar />
+      <Sidebar1 />
       <div className="flex-1 p-4">
         <Outlet />
       </div>
