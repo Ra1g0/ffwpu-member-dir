@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaPlus, FaSave, FaSpinner, FaCloudUploadAlt, FaCheck, FaTimes } from 'react-icons/fa';
 
-const API_BASE = 'https://ffwpu-member-dir.up.railway.app/directory';
+const API_BASE = import.meta.env.VITE_BASE_PATH || 'https://ffwpu-member-dir.up.railway.app/directory';
 const CLOUDINARY_UPLOAD_PRESET = 'members_uploads';
 const CLOUDINARY_CLOUD_NAME = 'debx9uf7g';
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
@@ -33,47 +33,114 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
   const [editAcademic, setEditAcademic] = useState([]);
   const [editFamily, setEditFamily] = useState([]);
   const [editPublicMission, setEditPublicMission] = useState([]);
-  const [editWork, setEditWork] = useState([]);
+  const [editWorkExp, setEditWorkExp] = useState([]);
   const [editTraining, setEditTraining] = useState([]);
   const [editQualifications, setEditQualifications] = useState([]);
   const [editAwards, setEditAwards] = useState([]);
   const [editDisciplinary, setEditDisciplinary] = useState([]);
   const [editSpecialNotes, setEditSpecialNotes] = useState([]);
+  
+
+  const tabConfig = {
+    'Academic Background': {
+      url: 'academic-background',
+      state: editAcademic, 
+      setter: setEditAcademic, 
+      idKey: 'academic_record_id',
+      columns: ['period', 'school', 'degree', 'graduation'],
+      headers: ['Period', 'School', 'Major/Degree', 'Graduation']
+    },
+    'Family Details': {
+      url: 'family-details',
+      state: editFamily, 
+      setter: setEditFamily, 
+      idKey: 'family_member_id',
+      columns: ['relation', 'name', 'birthday', 'blessing'],
+      headers: ['Relation', 'Name', 'Birthday', 'Blessing']
+    },
+    'Public Mission Post Held': {
+      url: 'public-mission-posts',
+      state: editPublicMission, 
+      setter: setEditPublicMission, 
+      idKey: 'mission_id',
+      columns: ['period','organization','final_position','department','description'],
+      headers: ['Period','Organization','Final Position','Department','Description']
+    },
+    'Work Experience': {
+      url: 'work-experience',
+      state: editWorkExp, 
+      setter: setEditWorkExp, 
+      idKey: 'work_experience_id',
+      columns: ['period','organization','position','description'],
+      headers: ['Period','Organization','Position','Description']
+    },
+    'Training & Qualifications': {
+      url: 'training-qualifications',
+      state: editTraining, 
+      setter: setEditTraining, 
+      idKey: 'training_id',
+      columns: ['title','year','location','description'],
+      headers: ['Title','Year','Location','Description']
+    },
+    'Awards & Penalties': {
+      awardsUrl: 'awards-recognitions',
+      awardsState: editAwards, 
+      awardsSetter: setEditAwards, 
+      awardsIdKey: 'award_id',
+      awardsColumns: ['title','year','organization','description'],
+      awardsHeaders: ['Title','Year','Organization','Description'],
+      penaltiesUrl: 'disciplinary-actions',
+      penaltiesState: editDisciplinary, 
+      penaltiesSetter: setEditDisciplinary, 
+      penaltiesIdKey: 'penalty_id',
+      penaltiesColumns: ['date', 'reason'],
+      penaltiesHeaders: ['Date', 'Reason']
+    },
+    'Special Notes': {
+      url: 'special-note',
+      state: editSpecialNotes, 
+      setter: setEditSpecialNotes, 
+      idKey: 'note_id',
+      columns: ['date_written', 'details'],
+      headers: ['Date Written', 'Details']
+    },
+   
+  };
+
+  const fetchTabData = async (tab) => {
+    const conf = tabConfig[tab];
+    if (!conf) return;
+    
+    try {
+      if (tab === 'Awards & Penalties') {
+        const [awardsRes, penaltiesRes] = await Promise.all([
+          axios.get(`${API_BASE}/members/${member.member_id}/${conf.awardsUrl}/`),
+          axios.get(`${API_BASE}/members/${member.member_id}/${conf.penaltiesUrl}/`)
+        ]);
+        conf.awardsSetter(awardsRes.data);
+        conf.penaltiesSetter(penaltiesRes.data);
+      } else {
+        const res = await axios.get(`${API_BASE}/members/${member.member_id}/${conf.url}/`);
+        conf.setter(res.data);
+      }
+    } catch (err) {
+      console.error('Fetch error', err);
+    }
+  };
 
   useEffect(() => {
-    if (!member?.member_id) return;
-    
+    if (!isOpen || !member?.member_id) return;
+
     if (activeTab === 'Personal & Contact') {
       axios.get(`${API_BASE}/members/${member.member_id}/`)
         .then(res => {
           setPersonalInfo(res.data);
           setFormData(res.data);
         });
+    } else {
+      fetchTabData(activeTab);
     }
-    if (activeTab === 'Academic Background') {
-      axios.get(`${API_BASE}/members/${member.member_id}/academic-background/`).then(res => setEditAcademic(res.data));
-    }
-    if (activeTab === 'Family Details') {
-      axios.get(`${API_BASE}/members/${member.member_id}/family-details/`).then(res => setEditFamily(res.data));
-    }
-    if (activeTab === 'Public Mission Post Held') {
-      axios.get(`${API_BASE}/members/${member.member_id}/public-mission-posts/`).then(res => setEditPublicMission(res.data));
-    }
-    if (activeTab === 'Work Experience') {
-      axios.get(`${API_BASE}/members/${member.member_id}/work-experiences/`).then(res => setEditWork(res.data));
-    }
-    if (activeTab === 'Training & Qualifications') {
-      axios.get(`${API_BASE}/members/${member.member_id}/training-courses/`).then(res => setEditTraining(res.data));
-      axios.get(`${API_BASE}/members/${member.member_id}/qualifications/`).then(res => setEditQualifications(res.data));
-    }
-    if (activeTab === 'Awards & Penalties') {
-      axios.get(`${API_BASE}/members/${member.member_id}/awards-recognition/`).then(res => setEditAwards(res.data));
-      axios.get(`${API_BASE}/members/${member.member_id}/disciplinary-actions/`).then(res => setEditDisciplinary(res.data));
-    }
-    if (activeTab === 'Special Notes') {
-      axios.get(`${API_BASE}/members/${member.member_id}/special-note/`).then(res => setEditSpecialNotes(res.data));
-    }
-  }, [activeTab, member]);
+  }, [activeTab, member, isOpen]);
 
   const extractImagePath = (fullUrl) => {
     if (!fullUrl) return null;
@@ -145,106 +212,89 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
       'Academic Background': setEditAcademic,
       'Family Details': setEditFamily,
       'Public Mission Post Held': setEditPublicMission,
-      'Work Experience': setEditWork,
+      'Work Experience': setEditWorkExp,
       'Training & Qualifications': setEditTraining,
       'Qualifications': setEditQualifications,
-      'Awards': setEditAwards,
+      'Awards & Penalties': setEditAwards,
       'Disciplinary Actions': setEditDisciplinary,
       'Special Notes': setEditSpecialNotes,
+      
     };
+    
     const stateMap = {
       'Academic Background': editAcademic,
       'Family Details': editFamily,
       'Public Mission Post Held': editPublicMission,
-      'Work Experience': editWork,
+      'Work Experience': editWorkExp,
       'Training & Qualifications': editTraining,
       'Qualifications': editQualifications,
-      'Awards': editAwards,
+      'Awards & Penalties': editAwards,
       'Disciplinary Actions': editDisciplinary,
       'Special Notes': editSpecialNotes,
+      
     };
+    
     const newRows = [...stateMap[tab]];
     newRows[idx] = { ...newRows[idx], [key]: value };
     setterMap[tab](newRows);
   };
 
-  const handleUpdateRow = (tab, row) => {
+  const handleUpdateRow = async (tab, row) => {
     let url = '';
-    switch (tab) {
-      case 'Academic Background':
-        url = `${API_BASE}/members/${member.member_id}/academic-background/${row.academic_record_id}/update/`;
-        break;
-      case 'Family Details':
-        url = `${API_BASE}/members/${member.member_id}/family-details/${row.family_member_id}/update/`;
-        break;
-      case 'Public Mission Post Held':
-        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/${row.mission_id}/update/`;
-        break;
-      case 'Work Experience':
-        url = `${API_BASE}/members/${member.member_id}/work-experiences/${row.experience_id}/update/`;
-        break;
-      case 'Training & Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/training-courses/${row.training_id}/update/`;
-        break;
-      case 'Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/qualifications/${row.qualification_id}/update/`;
-        break;
-      case 'Awards':
-        url = `${API_BASE}/members/${member.member_id}/awards-recognition/${row.award_id}/update/`;
-        break;
-      case 'Disciplinary Actions':
-        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/${row.penalty_id}/update/`;
-        break;
-      case 'Special Notes':
-        url = `${API_BASE}/members/${member.member_id}/special-note/${row.note_id}/update/`;
-        break;
-      default:
-        return;
+    const conf = tabConfig[tab];
+    
+    if (!conf) {
+      // Handle special cases
+      switch (tab) {
+        case 'Awards & Penalties':
+          // This should be handled differently as it's a combined tab
+          return;
+        default:
+          return;
+      }
     }
-    axios.put(url, row)
-      .then(() => {
-        alert('Updated!');
-        setEditRowId(null);
-      })
-      .catch(() => alert('Update failed!'));
+    
+    try {
+      if (tab === 'Awards & Penalties') {
+        // This tab is handled differently
+        return;
+      }
+      
+      await axios.put(`${API_BASE}/members/${member.member_id}/${conf.url}/${row[conf.idKey]}/update/`, row);
+      alert('Updated!');
+      await fetchTabData(tab);
+    } catch {
+      alert('Update failed!');
+    }
   };
 
-  const handleDeleteRow = (tab, row) => {
+  const handleDeleteRow = async (tab, row) => {
     let url = '';
-    switch (tab) {
-      case 'Academic Background':
-        url = `${API_BASE}/members/${member.member_id}/academic-background/${row.academic_record_id}/delete/`;
-        break;
-      case 'Family Details':
-        url = `${API_BASE}/members/${member.member_id}/family-details/${row.family_member_id}/delete/`;
-        break;
-      case 'Public Mission Post Held':
-        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/${row.mission_id}/delete/`;
-        break;
-      case 'Work Experience':
-        url = `${API_BASE}/members/${member.member_id}/work-experiences/${row.experience_id}/delete/`;
-        break;
-      case 'Training & Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/training-courses/${row.training_id}/delete/`;
-        break;
-      case 'Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/qualifications/${row.qualification_id}/delete/`;
-        break;
-      case 'Awards':
-        url = `${API_BASE}/members/${member.member_id}/awards-recognition/${row.award_id}/delete/`;
-        break;
-      case 'Disciplinary Actions':
-        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/${row.penalty_id}/delete/`;
-        break;
-      case 'Special Notes':
-        url = `${API_BASE}/members/${member.member_id}/special-note/${row.note_id}/delete/`;
-        break;
-      default:
-        return;
+    const conf = tabConfig[tab];
+    
+    if (!conf) {
+      // Handle special cases
+      switch (tab) {
+        case 'Awards & Penalties':
+          // This should be handled differently as it's a combined tab
+          return;
+        default:
+          return;
+      }
     }
-    axios.delete(url)
-      .then(() => alert('Deleted!'))
-      .catch(() => alert('Delete failed!'));
+    
+    try {
+      if (tab === 'Awards & Penalties') {
+        // This tab is handled differently
+        return;
+      }
+      
+      await axios.delete(`${API_BASE}/members/${member.member_id}/${conf.url}/${row[conf.idKey]}/delete/`);
+      alert('Deleted!');
+      await fetchTabData(tab);
+    } catch {
+      alert('Delete failed!');
+    }
   };
 
   const handleAddRow = (tab) => {
@@ -252,117 +302,77 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
       'Academic Background': { period: '', school: '', degree: '', graduation: '', isNew: true },
       'Family Details': { relation: '', name: '', birthday: '', blessing: '', isNew: true },
       'Public Mission Post Held': { period: '', organization: '', final_position: '', department: '', description: '', isNew: true },
-      'Work Experience': { period: '', organization_name: '', final_position: '', department: '', job_description: '', isNew: true },
-      'Training & Qualifications': { type: '', name_of_course: '', period: '', organization: '', status: '', isNew: true },
-      'Qualifications': { date_acquisition: '', name_qualification: '', remarks: '', isNew: true },
-      'Awards': { date: '', type: '', description: '', organization: '', isNew: true },
-      'Disciplinary Actions': { date: '', reason: '', isNew: true },
+      'Work Experience': { period: '', organization: '', position: '', description: '', isNew: true },
+      'Training & Qualifications': { title: '', year: '', location: '', description: '', isNew: true },
+      'Awards & Penalties': { title: '', year: '', organization: '', description: '', isNew: true },
       'Special Notes': { date_written: '', details: '', isNew: true },
+      
     };
-    switch (tab) {
-      case 'Academic Background':
-        setEditAcademic(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Family Details':
-        setEditFamily(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Public Mission Post Held':
-        setEditPublicMission(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Work Experience':
-        setEditWork(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Training & Qualifications':
-        setEditTraining(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Qualifications':
-        setEditQualifications(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Awards':
-        setEditAwards(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Disciplinary Actions':
-        setEditDisciplinary(prev => [...prev, emptyRows[tab]]);
-        break;
-      case 'Special Notes':
-        setEditSpecialNotes(prev => [...prev, emptyRows[tab]]);
-        break;
-      default:
-        break;
+    
+    const setterMap = {
+      'Academic Background': setEditAcademic,
+      'Family Details': setEditFamily,
+      'Public Mission Post Held': setEditPublicMission,
+      'Work Experience': setEditWorkExp,
+      'Training & Qualifications': setEditTraining,
+      'Awards & Penalties': setEditAwards,
+      'Special Notes': setEditSpecialNotes,
+   
+    };
+    
+    setterMap[tab](prev => [...prev, emptyRows[tab]]);
+  };
+
+  const handleCreateRow = async (tab, row, idx) => {
+    let url = '';
+    const conf = tabConfig[tab];
+    
+    if (!conf) return;
+    
+    const payload = { ...row };
+    delete payload.isNew;
+    
+    try {
+      if (tab === 'Awards & Penalties') {
+        // This tab is handled differently
+        return;
+      }
+      
+      await axios.post(`${API_BASE}/members/${member.member_id}/${conf.url}/create/`, payload);
+      alert('Created!');
+      
+      // Remove the temporary row
+      const setterMap = {
+        'Academic Background': setEditAcademic,
+        'Family Details': setEditFamily,
+        'Public Mission Post Held': setEditPublicMission,
+        'Work Experience': setEditWorkExp,
+        'Training & Qualifications': setEditTraining,
+        'Awards & Penalties': setEditAwards,
+        'Special Notes': setEditSpecialNotes,
+        
+      };
+      
+      setterMap[tab](prev => prev.filter((_, i) => i !== idx));
+      await fetchTabData(tab);
+    } catch {
+      alert('Create failed!');
     }
   };
 
-  const handleCreateRow = (tab, row, idx) => {
-    let url = '';
-    let payload = { ...row };
-    delete payload.isNew;
-    switch (tab) {
-      case 'Academic Background':
-        url = `${API_BASE}/members/${member.member_id}/academic-background/create/`;
-        break;
-      case 'Family Details':
-        url = `${API_BASE}/members/${member.member_id}/family-details/create/`;
-        break;
-      case 'Public Mission Post Held':
-        url = `${API_BASE}/members/${member.member_id}/public-mission-posts/create/`;
-        break;
-      case 'Work Experience':
-        url = `${API_BASE}/members/${member.member_id}/work-experiences/create/`;
-        break;
-      case 'Training & Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/training-courses/create/`;
-        break;
-      case 'Qualifications':
-        url = `${API_BASE}/members/${member.member_id}/qualifications/create/`;
-        break;
-      case 'Awards':
-        url = `${API_BASE}/members/${member.member_id}/awards-recognition/create/`;
-        break;
-      case 'Disciplinary Actions':
-        url = `${API_BASE}/members/${member.member_id}/disciplinary-actions/create/`;
-        break;
-      case 'Special Notes':
-        url = `${API_BASE}/members/${member.member_id}/special-note/create/`;
-        break;
-      default:
-        return;
-    }
-    axios.post(url, payload)
-      .then(() => {
-        alert('Created!');
-        switch (tab) {
-          case 'Academic Background':
-            setEditAcademic(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Family Details':
-            setEditFamily(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Public Mission Post Held':
-            setEditPublicMission(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Work Experience':
-            setEditWork(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Training & Qualifications':
-            setEditTraining(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Qualifications':
-            setEditQualifications(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Awards':
-            setEditAwards(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Disciplinary Actions':
-            setEditDisciplinary(prev => prev.filter((_, i) => i !== idx));
-            break;
-          case 'Special Notes':
-            setEditSpecialNotes(prev => prev.filter((_, i) => i !== idx));
-            break;
-          default:
-            break;
-        }
-      })
-      .catch(() => alert('Create failed!'));
+  const handleRemoveUnsavedRow = (tab, idx) => {
+    const setterMap = {
+      'Academic Background': setEditAcademic,
+      'Family Details': setEditFamily,
+      'Public Mission Post Held': setEditPublicMission,
+      'Work Experience': setEditWorkExp,
+      'Training & Qualifications': setEditTraining,
+      'Awards & Penalties': setEditAwards,
+      'Special Notes': setEditSpecialNotes,
+     
+    };
+    
+    setterMap[tab](prev => prev.filter((_, i) => i !== idx));
   };
 
   const renderEditableTable = (headers, keys, rows, tab, idKey) => (
@@ -382,7 +392,7 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
               {keys.map((key, colIdx) => (
                 <td key={colIdx} className="px-4 py-2 whitespace-nowrap">
                   <input
-                    type={key.toLowerCase().includes('date') ? 'date' : 'text'}
+                    type={key.toLowerCase().includes('date') || key.toLowerCase().includes('year') || key.toLowerCase().includes('birthday') ? 'date' : 'text'}
                     className={`border ${editRowId === row[idKey] ? 'border-blue-500' : 'border-gray-300'} rounded px-2 py-1 w-full`}
                     value={row[key] || ''}
                     onChange={e => handleTableInputChange(tab, rowIdx, key, e.target.value)}
@@ -393,13 +403,22 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
               <td className="px-4 py-2 whitespace-nowrap">
                 <div className="flex gap-2 justify-center items-center">
                   {row.isNew ? (
-                    <button
-                      className="text-sm px-2 py-1 bg-green-600 text-white rounded-md flex items-center gap-1"
-                      onClick={() => handleCreateRow(tab, row, rowIdx)}
-                      title="Create"
-                    >
-                      <FaPlus className="text-xs" /> Create
-                    </button>
+                    <>
+                      <button
+                        className="text-sm px-2 py-1 bg-green-600 text-white rounded-md flex items-center gap-1"
+                        onClick={() => handleCreateRow(tab, row, rowIdx)}
+                        title="Create"
+                      >
+                        <FaCheck className="text-xs" /> Create
+                      </button>
+                      <button
+                        className="text-sm px-2 py-1 bg-red-600 text-white rounded-md flex items-center gap-1"
+                        onClick={() => handleRemoveUnsavedRow(tab, rowIdx)}
+                        title="Remove"
+                      >
+                        <FaTimes className="text-xs" /> Remove
+                      </button>
+                    </>
                   ) : (
                     <>
                       {editRowId === row[idKey] ? (
@@ -448,12 +467,20 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           ))}
         </tbody>
       </table>
+      <div className="mt-2 text-right">
+        <button
+          className="px-3 py-1 bg-[#245AD2] text-white rounded text-sm flex items-center gap-1"
+          onClick={() => handleAddRow(tab)}
+        >
+          <FaPlus /> Add New
+        </button>
+      </div>
     </div>
   );
 
   const renderTabHeader = (title, buttonText, onAdd) => (
     <div className="flex justify-between items-center mb-2">
-      <p className="text-sm sm:text-base">{title}</p>
+      <p className="text-sm sm:text-base font-semibold">{title}</p>
       <button
         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded flex items-center gap-1 text-xs sm:text-sm"
         onClick={onAdd}
@@ -612,7 +639,8 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: 'Name', key: 'full_name' },
+                    { label: 'First Name', key: 'first_name' },
+                    { label: 'Last Name', key: 'last_name' },
                     { label: 'Email', key: 'email' },
                     { label: 'Region', key: 'region' },
                     { label: 'Nation', key: 'nation' },
@@ -662,8 +690,8 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             <div className="w-full">
               {renderTabHeader('Academic Background', 'Add Academic', () => handleAddRow('Academic Background'))}
               {renderEditableTable(
-                ['Period', 'School', 'Major/Degree', 'Graduation'],
-                ['period', 'school', 'degree', 'graduation'],
+                tabConfig['Academic Background'].headers,
+                tabConfig['Academic Background'].columns,
                 editAcademic,
                 'Academic Background',
                 'academic_record_id'
@@ -675,8 +703,8 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             <div className="w-full">
               {renderTabHeader('Family Details', 'Add Family Member', () => handleAddRow('Family Details'))}
               {renderEditableTable(
-                ['Relation', 'Name', 'Birthday', 'Blessing'],
-                ['relation', 'name', 'birthday', 'blessing'],
+                tabConfig['Family Details'].headers,
+                tabConfig['Family Details'].columns,
                 editFamily,
                 'Family Details',
                 'family_member_id'
@@ -688,8 +716,8 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             <div className="w-full">
               {renderTabHeader('Public Mission Post Held', 'Add Mission Post', () => handleAddRow('Public Mission Post Held'))}
               {renderEditableTable(
-                ['Period', 'Organization', 'Final Position', 'Department', 'Description'],
-                ['period', 'organization', 'final_position', 'department', 'description'],
+                tabConfig['Public Mission Post Held'].headers,
+                tabConfig['Public Mission Post Held'].columns,
                 editPublicMission,
                 'Public Mission Post Held',
                 'mission_id'
@@ -701,32 +729,24 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             <div className="w-full">
               {renderTabHeader('Work Experience', 'Add Experience', () => handleAddRow('Work Experience'))}
               {renderEditableTable(
-                ['Period', 'Organization Name', 'Final Position', 'Department', 'Job Description'],
-                ['period', 'organization_name', 'final_position', 'department', 'job_description'],
-                editWork,
+                tabConfig['Work Experience'].headers,
+                tabConfig['Work Experience'].columns,
+                editWorkExp,
                 'Work Experience',
-                'experience_id'
+                'work_experience_id'
               )}
             </div>
           )}
 
           {activeTab === 'Training & Qualifications' && (
             <div className="w-full">
-              {renderTabHeader('Training Courses', 'Add Training', () => handleAddRow('Training & Qualifications'))}
+              {renderTabHeader('Training & Qualifications', 'Add Training', () => handleAddRow('Training & Qualifications'))}
               {renderEditableTable(
-                ['Type', 'Name of Course', 'Period', 'Organization', 'Status'],
-                ['type', 'name_of_course', 'period', 'organization', 'status'],
+                tabConfig['Training & Qualifications'].headers,
+                tabConfig['Training & Qualifications'].columns,
                 editTraining,
                 'Training & Qualifications',
                 'training_id'
-              )}
-              {renderTabHeader('Professional Qualifications', 'Add Qualification', () => handleAddRow('Qualifications'))}
-              {renderEditableTable(
-                ['Date of Acquisition', 'Name of Qualification', 'Remarks'],
-                ['date_acquisition', 'name_qualification', 'remarks'],
-                editQualifications,
-                'Qualifications',
-                'qualification_id'
               )}
             </div>
           )}
@@ -734,20 +754,20 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
           {activeTab === 'Awards & Penalties' && (
             <div className="w-full space-y-8">
               <div>
-                {renderTabHeader('Awards', 'Add Award', () => handleAddRow('Awards'))}
+                {renderTabHeader('Awards', 'Add Award', () => handleAddRow('Awards & Penalties'))}
                 {renderEditableTable(
-                  ['Date', 'Type', 'Description', 'Organization'],
-                  ['date', 'type', 'description', 'organization'],
+                  tabConfig['Awards & Penalties'].awardsHeaders,
+                  tabConfig['Awards & Penalties'].awardsColumns,
                   editAwards,
-                  'Awards',
+                  'Awards & Penalties',
                   'award_id'
                 )}
               </div>
               <div>
                 {renderTabHeader('Disciplinary Actions', 'Add Disciplinary Action', () => handleAddRow('Disciplinary Actions'))}
                 {renderEditableTable(
-                  ['Date', 'Reason'],
-                  ['date', 'reason'],
+                  tabConfig['Awards & Penalties'].penaltiesHeaders,
+                  tabConfig['Awards & Penalties'].penaltiesColumns,
                   editDisciplinary,
                   'Disciplinary Actions',
                   'penalty_id'
@@ -760,39 +780,19 @@ const MemberEditModal = ({ isOpen, onClose, member }) => {
             <div className="w-full">
               {renderTabHeader('Special Notes', 'Add Note', () => handleAddRow('Special Notes'))}
               {renderEditableTable(
-                ['Date Written', 'Details'],
-                ['date_written', 'details'],
+                tabConfig['Special Notes'].headers,
+                tabConfig['Special Notes'].columns,
                 editSpecialNotes,
                 'Special Notes',
                 'note_id'
               )}
             </div>
-          )}
-        </div>
+     
 
-        <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200">
-          <div className="flex justify-end">
-            <button
-              className={`px-6 py-2 rounded-md shadow flex items-center gap-2 ${
-                isSaving ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
-              } text-white font-medium transition-all`}
-              onClick={handleSaveAll}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <FaSpinner className="animate-spin" /> Saving...
-                </>
-              ) : (
-                <>
-                  <FaSave /> Save All Changes
-                </>
               )}
-            </button>
+            </div>
+        </div>      
           </div>
-        </div>
-      </div>
-    </div>
   );
 };
 
