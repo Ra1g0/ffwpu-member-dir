@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaPlus, FaSave, FaSpinner, FaCloudUploadAlt, FaCheck, FaTimes } from 'react-icons/fa';
 
-const API_BASE = import.meta.env.VITE_BASE_PATH || 'https://ffwpu-member-dir.up.railway.app/directory';
+const API_BASE = 'https://ffwpu-member-dir.up.railway.app/directory';
 const CLOUDINARY_UPLOAD_PRESET = 'members_uploads';
 const CLOUDINARY_CLOUD_NAME = 'debx9uf7g';
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
